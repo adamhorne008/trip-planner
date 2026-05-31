@@ -209,8 +209,8 @@ async function openDetailSheet(id, source) {
     document.getElementById('detailTitle').textContent = a.name;
     html += detailRow('🏨 Accommodation', true, 'var(--accommodation)');
     if (a.location) html += detailRow(`📍 ${a.location}`);
-    html += detailRow(`Check-in: <strong>${formatDateShort(a.check_in_date)}${a.check_in_time ? ' at ' + a.check_in_time : ''}</strong>`);
-    html += detailRow(`Check-out: <strong>${formatDateShort(a.check_out_date)}${a.check_out_time ? ' at ' + a.check_out_time : ''}</strong>`);
+    html += detailRow(`Check-in: <strong>${formatDateShort(a.check_in_date)}</strong>`);
+    html += detailRow(`Check-out: <strong>${formatDateShort(a.check_out_date)}</strong>`);
     if (a.link) html += detailRow(`<a href="${a.link}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:underline;">Booking link ↗</a>`);
   } else {
     const { data: e } = await db.from('calendar_entries').select('*').eq('id', id).single();
@@ -299,8 +299,6 @@ async function editFromDetail(id, source) {
     setVal('accomLocation',    a.location);
     setVal('accomCheckinDate', a.check_in_date);
     setVal('accomCheckoutDate',a.check_out_date);
-    setVal('accomCheckinTime', a.check_in_time);
-    setVal('accomCheckoutTime',a.check_out_time);
     setVal('accomLink',        a.link);
     openSheet('entrySheet');
   } else {
@@ -361,8 +359,6 @@ async function saveEntry(e) {
       location:       document.getElementById('accomLocation').value.trim(),
       check_in_date:  document.getElementById('accomCheckinDate').value,
       check_out_date: document.getElementById('accomCheckoutDate').value,
-      check_in_time:  document.getElementById('accomCheckinTime').value,
-      check_out_time: document.getElementById('accomCheckoutTime').value,
       link:           document.getElementById('accomLink').value.trim(),
     };
     if (editingId && editingType === 'accom') {

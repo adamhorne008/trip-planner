@@ -594,3 +594,54 @@ select option { background: #fff; }
   font-family: inherit;
   cursor: pointer;
 }
+
+/* ── Tag picker (shortlist form) ───────────────────────── */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.tag-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: auto;
+}
+.tag-btn.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+
+/* ── Tag pills on shortlist cards ──────────────────────── */
+.shortlist-item__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.shortlist-tag {
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #e8f0fe;
+  color: var(--accent2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* ── Tag filter pills (distinct from location pills) ───── */
+.tag-filter-btn {
+  border-style: dashed;
+}
+.tag-filter-btn.active {
+  border-style: solid;
+}

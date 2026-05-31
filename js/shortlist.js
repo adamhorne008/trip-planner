@@ -5,6 +5,7 @@
 let editingItemId = null;
 let allItems = [];
 let activeFilter = null; // null = show all
+let selectedTags = []; // tags selected in the add/edit form
 
 // ── Init ──────────────────────────────────────────────────
 (async () => {
@@ -42,20 +43,31 @@ function renderFilters() {
     allItems.map(i => (i.location || '').trim()).filter(Boolean)
   )].sort();
 
-  if (!locations.length) {
+  // Collect unique tags across all items
+  const tags = [...new Set(
+    allItems.flatMap(i => i.tags || [])
+  )].sort();
+
+  if (!locations.length && !tags.length) {
     container.innerHTML = '';
     return;
   }
 
-  const allBtn = `<button class="location-filter-btn${activeFilter === null ? ' active' : ''}" data-loc="">All</button>`;
+  const allBtn = `<button class="location-filter-btn${activeFilter === null ? ' active' : ''}" data-loc="" data-kind="all">All</button>`;
   const locBtns = locations.map(loc =>
-    `<button class="location-filter-btn${activeFilter === loc ? ' active' : ''}" data-loc="${loc}">${loc}</button>`
+    `<button class="location-filter-btn${activeFilter === 'loc:' + loc ? ' active' : ''}" data-loc="${loc}" data-kind="loc">📍 ${loc}</button>`
   ).join('');
-  container.innerHTML = allBtn + locBtns;
+  const tagBtns = tags.map(tag =>
+    `<button class="location-filter-btn tag-filter-btn${activeFilter === 'tag:' + tag ? ' active' : ''}" data-tag="${tag}" data-kind="tag">${tag}</button>`
+  ).join('');
+  container.innerHTML = allBtn + locBtns + tagBtns;
 
   container.querySelectorAll('.location-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      activeFilter = btn.dataset.loc || null;
+      const kind = btn.dataset.kind;
+      if (kind === 'all') activeFilter = null;
+      else if (kind === 'loc') activeFilter = 'loc:' + btn.dataset.loc;
+      else if (kind === 'tag') activeFilter = 'tag:' + btn.dataset.tag;
       renderFilters();
       renderGrid();
     });
@@ -64,13 +76,16 @@ function renderFilters() {
 
 function renderGrid() {
   const grid = document.getElementById('shortlistGrid');
-  const filtered = activeFilter
-    ? allItems.filter(i => (i.location || '').trim() === activeFilter)
-    : allItems;
+  let filtered = allItems;
+  if (activeFilter) {
+    const [kind, value] = activeFilter.split(':');
+    if (kind === 'loc') filtered = allItems.filter(i => (i.location || '').trim() === value);
+    if (kind === 'tag') filtered = allItems.filter(i => (i.tags || []).includes(value));
+  }
 
   if (!filtered.length) {
     grid.innerHTML = `<div class="empty-shortlist">
-      <p>${activeFilter ? `No items in ${activeFilter}.` : 'No ideas yet.<br/>Tap + to add something you\'d like to do.'}</p>
+      <p>${activeFilter ? `No items match this filter.` : 'No ideas yet.<br/>Tap + to add something you\'d like to do.'}</p>
     </div>`;
     return;
   }
@@ -87,6 +102,10 @@ function renderGrid() {
 
 
 function buildItemCard(item) {
+  const tags = (item.tags || []);
+  const tagsHtml = tags.length
+    ? `<div class="shortlist-item__tags">${tags.map(t => `<span class="shortlist-tag">${t}</span>`).join('')}</div>`
+    : '';
   return `
     <div class="shortlist-item">
       <div class="shortlist-item__name">${item.name}</div>
@@ -95,6 +114,7 @@ function buildItemCard(item) {
         ${item.location && item.link ? ' · ' : ''}
         ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener">🔗 Link</a>` : ''}
       </div>
+      ${tagsHtml}
       <div class="shortlist-item__actions">
         <button class="btn-assign" data-action="assign" data-id="${item.id}">＋ Add to day</button>
         <button data-action="edit"   data-id="${item.id}" style="background:var(--surface2);color:var(--muted);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;border:none;">Edit</button>
@@ -116,7 +136,16 @@ function openAddItemSheet() {
   document.getElementById('itemSheetTitle').textContent = 'Add to shortlist';
   document.getElementById('itemForm').reset();
   document.getElementById('itemId').value = '';
+  selectedTags = [];
+  document.getElementById('itemTags').value = '[]';
+  syncTagPicker();
   openSheet('itemSheet');
+}
+
+function syncTagPicker() {
+  document.querySelectorAll('#tagPicker .tag-btn').forEach(btn => {
+    btn.classList.toggle('active', selectedTags.includes(btn.dataset.tag));
+  });
 }
 
 async function openEditItemSheet(id) {
@@ -128,6 +157,9 @@ async function openEditItemSheet(id) {
   document.getElementById('itemName').value  = item.name || '';
   document.getElementById('itemLocation').value = item.location || '';
   document.getElementById('itemLink').value  = item.link || '';
+  selectedTags = item.tags || [];
+  document.getElementById('itemTags').value = JSON.stringify(selectedTags);
+  syncTagPicker();
   openSheet('itemSheet');
 }
 
@@ -140,6 +172,7 @@ async function saveItem(e) {
     name:     document.getElementById('itemName').value.trim(),
     location: document.getElementById('itemLocation').value.trim(),
     link:     document.getElementById('itemLink').value.trim(),
+    tags:     selectedTags,
   };
 
   let error;
@@ -237,4 +270,18 @@ function bindEvents() {
   document.getElementById('overlay').addEventListener('click', () => closeSheet());
   document.getElementById('itemForm').addEventListener('submit', saveItem);
   document.getElementById('confirmAssignBtn').addEventListener('click', confirmAssign);
+
+  // Tag picker
+  document.getElementById('tagPicker').addEventListener('click', e => {
+    const btn = e.target.closest('.tag-btn');
+    if (!btn) return;
+    const tag = btn.dataset.tag;
+    if (selectedTags.includes(tag)) {
+      selectedTags = selectedTags.filter(t => t !== tag);
+    } else {
+      selectedTags.push(tag);
+    }
+    document.getElementById('itemTags').value = JSON.stringify(selectedTags);
+    syncTagPicker();
+  });
 }

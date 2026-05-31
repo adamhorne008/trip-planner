@@ -68,6 +68,20 @@
         <input type="text" id="itemLocation" placeholder="City or venue" />
       </div>
       <div class="form-group">
+        <label>Tags</label>
+        <div class="tag-picker" id="tagPicker">
+          <button type="button" class="tag-btn" data-tag="Bar">🍺 Bar</button>
+          <button type="button" class="tag-btn" data-tag="Restaurant">🍽️ Restaurant</button>
+          <button type="button" class="tag-btn" data-tag="Activity">🎯 Activity</button>
+          <button type="button" class="tag-btn" data-tag="Museum">🏛️ Museum</button>
+          <button type="button" class="tag-btn" data-tag="Sport">⚽ Sport</button>
+          <button type="button" class="tag-btn" data-tag="Shopping">🛍️ Shopping</button>
+          <button type="button" class="tag-btn" data-tag="Music">🎵 Music</button>
+          <button type="button" class="tag-btn" data-tag="Outdoors">🌿 Outdoors</button>
+        </div>
+        <input type="hidden" id="itemTags" />
+      </div>
+      <div class="form-group">
         <label>Link</label>
         <input type="url" id="itemLink" placeholder="https://…" />
       </div>
