@@ -159,21 +159,26 @@ select option { background: #fff; }
 .entry-card__title { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
 .entry-card__meta  { font-size: 13px; color: var(--muted); line-height: 1.5; }
 .entry-card__meta a { color: var(--accent2); text-decoration: underline; }
-.entry-card__actions { display: flex; gap: 8px; margin-top: 10px; }
-.entry-card__actions button {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  background: var(--surface2);
-  color: var(--muted);
+
+/* Tappable cards */
+.entry-card { cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; }
+.entry-card:active { transform: scale(0.99); box-shadow: none; }
+
+/* ── Accommodation mini card ── */
+.accom-card {
+  background: #eef3fb;
+  border: 1px solid #c8d8f0;
+  border-left: 4px solid var(--accommodation);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-.entry-card__actions button.danger {
-  color: var(--accent);
-  border-color: rgba(200,16,46,0.2);
-  background: rgba(200,16,46,0.06);
-}
+.accom-card:hover, .accom-card:active { background: #e4ecf8; }
+.accom-card__label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accommodation); margin-bottom: 3px; }
+.accom-card__name  { font-size: 14px; font-weight: 600; color: var(--text); }
+.accom-card__location { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
 /* ── Location Bar ── */
 .location-bar {
@@ -331,7 +336,7 @@ select option { background: #fff; }
   flex: 1;
   overflow: hidden;
   touch-action: pan-y;
-  padding: 14px 14px 120px;
+  padding: 16px 16px 120px;
 }
 
 /* Section headers */
