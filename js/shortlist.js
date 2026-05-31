@@ -78,10 +78,10 @@ function renderFilters() {
 }
 
 function initGridListener() {
-  // Use document-level delegation so clicks work regardless of scroll position or layout
   document.addEventListener('click', e => {
-    const btn = e.target.closest('#shortlistGrid [data-action]');
+    const btn = e.target.closest('[data-action]');
     if (!btn) return;
+    if (!btn.closest('#shortlistGrid')) return; // only handle grid card buttons
     const { action, id } = btn.dataset;
     if (action === 'edit')   openEditItemSheet(id);
     if (action === 'delete') deleteItem(id);
