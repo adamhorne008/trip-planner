@@ -11,6 +11,8 @@ let selectedTags = []; // tags selected in the add/edit form
 (async () => {
   await requireAuth();
   populateDateSelect();
+  initFilterListener();
+  initGridListener();
   await loadShortlist();
   bindEvents();
 })();
@@ -36,14 +38,26 @@ async function loadShortlist() {
 }
 
 // ── Filters ───────────────────────────────────────────────
+function initFilterListener() {
+  document.getElementById('locationFilters').addEventListener('click', e => {
+    const btn = e.target.closest('.location-filter-btn');
+    if (!btn) return;
+    const kind = btn.dataset.kind;
+    if (kind === 'all') activeFilter = null;
+    else if (kind === 'loc') activeFilter = 'loc:' + btn.dataset.loc;
+    else if (kind === 'tag') activeFilter = 'tag:' + btn.dataset.tag;
+    renderFilters();
+    renderGrid();
+  });
+}
+
 function renderFilters() {
   const container = document.getElementById('locationFilters');
-  // Collect unique, non-empty locations
+
   const locations = [...new Set(
     allItems.map(i => (i.location || '').trim()).filter(Boolean)
   )].sort();
 
-  // Collect unique tags across all items
   const tags = [...new Set(
     allItems.flatMap(i => i.tags || [])
   )].sort();
@@ -61,16 +75,16 @@ function renderFilters() {
     `<button class="location-filter-btn tag-filter-btn${activeFilter === 'tag:' + tag ? ' active' : ''}" data-tag="${tag}" data-kind="tag">${tag}</button>`
   ).join('');
   container.innerHTML = allBtn + locBtns + tagBtns;
+}
 
-  container.querySelectorAll('.location-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const kind = btn.dataset.kind;
-      if (kind === 'all') activeFilter = null;
-      else if (kind === 'loc') activeFilter = 'loc:' + btn.dataset.loc;
-      else if (kind === 'tag') activeFilter = 'tag:' + btn.dataset.tag;
-      renderFilters();
-      renderGrid();
-    });
+function initGridListener() {
+  document.getElementById('shortlistGrid').addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'edit')   openEditItemSheet(id);
+    if (action === 'delete') deleteItem(id);
+    if (action === 'assign') openAssignSheet(id);
   });
 }
 
@@ -91,13 +105,6 @@ function renderGrid() {
   }
 
   grid.innerHTML = filtered.map(buildItemCard).join('');
-
-  grid.querySelectorAll('[data-action="edit"]').forEach(btn =>
-    btn.addEventListener('click', () => openEditItemSheet(btn.dataset.id)));
-  grid.querySelectorAll('[data-action="delete"]').forEach(btn =>
-    btn.addEventListener('click', () => deleteItem(btn.dataset.id)));
-  grid.querySelectorAll('[data-action="assign"]').forEach(btn =>
-    btn.addEventListener('click', () => openAssignSheet(btn.dataset.id)));
 }
 
 
