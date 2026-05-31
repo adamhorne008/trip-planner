@@ -3,7 +3,7 @@
 -- Run this in the Supabase SQL editor
 -- ============================================================
 
--- Calendar entries (travel, game, activity, accommodation, note)
+-- Calendar entries
 create table if not exists calendar_entries (
   id uuid default gen_random_uuid() primary key,
   date date not null,
@@ -12,6 +12,13 @@ create table if not exists calendar_entries (
   details jsonb default '{}',
   sort_order int default 0,
   created_at timestamptz default now()
+);
+
+-- Day locations (one per day)
+create table if not exists day_locations (
+  date date primary key,
+  location text not null,
+  updated_at timestamptz default now()
 );
 
 -- Shortlist items
@@ -23,13 +30,22 @@ create table if not exists shortlist_items (
   created_at timestamptz default now()
 );
 
+-- Pre-trip checklist
+create table if not exists checklist_items (
+  id uuid default gen_random_uuid() primary key,
+  text text not null,
+  done boolean default false,
+  created_at timestamptz default now()
+);
+
 -- Enable RLS
 alter table calendar_entries enable row level security;
-alter table shortlist_items enable row level security;
+alter table day_locations     enable row level security;
+alter table shortlist_items   enable row level security;
+alter table checklist_items   enable row level security;
 
--- Allow any authenticated user full access (single-user app)
-create policy "auth_all_calendar" on calendar_entries
-  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-
-create policy "auth_all_shortlist" on shortlist_items
-  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+-- Policies
+create policy "auth_all_calendar"  on calendar_entries for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "auth_all_locations" on day_locations    for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "auth_all_shortlist" on shortlist_items  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "auth_all_checklist" on checklist_items  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');

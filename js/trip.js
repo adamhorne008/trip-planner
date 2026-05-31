@@ -20,7 +20,7 @@ let editingId   = null;
 
   buildDots();
   renderHeader();
-  await loadDay();
+  await Promise.all([loadDay(), loadLocation()]);
   bindEvents();
 })();
 
@@ -31,7 +31,7 @@ async function goToDate(date, direction) {
   currentDate = date;
   history.replaceState({}, '', '/trip?date=' + date);
   renderHeader();
-  await loadDay(direction);
+  await Promise.all([loadDay(direction), loadLocation()]);
 }
 
 function renderHeader() {
@@ -198,19 +198,26 @@ async function deleteEntry(id) {
 }
 
 // ── Sheet open/close ──────────────────────────────────────
-function openSheet() {
+function openSheet(sheetId) {
   document.getElementById('overlay').classList.add('open');
-  document.getElementById('entrySheet').classList.add('open');
+  document.getElementById(sheetId || 'entrySheet').classList.add('open');
 }
 
-function closeSheet() {
+function openSheet_entry() {
+  openSheet('entrySheet');
+}
+
+function closeSheet(sheetId) {
   document.getElementById('overlay').classList.remove('open');
-  document.getElementById('entrySheet').classList.remove('open');
-  document.getElementById('entryForm').reset();
-  showTypeFields('activity');
-  editingId = null;
-  document.getElementById('sheetTitle').textContent = 'Add to day';
-  document.getElementById('entryId').value = '';
+  const id = sheetId || 'entrySheet';
+  document.getElementById(id).classList.remove('open');
+  if (id === 'entrySheet') {
+    document.getElementById('entryForm').reset();
+    showTypeFields('activity');
+    editingId = null;
+    document.getElementById('sheetTitle').textContent = 'Add to day';
+    document.getElementById('entryId').value = '';
+  }
 }
 
 function showTypeFields(type) {
@@ -266,7 +273,7 @@ async function openEditSheet(id) {
       break;
   }
 
-  openSheet();
+  openSheet('entrySheet');
 }
 
 function setVal(id, val) {
@@ -363,6 +370,39 @@ function bindSwipe() {
   }, { passive: true });
 }
 
+// ── Location ──────────────────────────────────────────────
+async function loadLocation() {
+  const { data } = await db
+    .from('day_locations')
+    .select('location')
+    .eq('date', currentDate)
+    .maybeSingle();
+
+  const textEl = document.getElementById('locationText');
+  if (data && data.location) {
+    textEl.textContent = data.location;
+    textEl.classList.remove('empty');
+  } else {
+    textEl.textContent = 'Tap to set location';
+    textEl.classList.add('empty');
+  }
+}
+
+async function saveLocation() {
+  const location = document.getElementById('locationInput').value.trim();
+  const btn = document.getElementById('saveLocationBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  await db.from('day_locations').upsert(
+    { date: currentDate, location },
+    { onConflict: 'date' }
+  );
+
+  btn.disabled = false; btn.textContent = 'Save';
+  closeSheet('locationSheet');
+  await loadLocation();
+}
+
 // ── Bind all events ───────────────────────────────────────
 function bindEvents() {
   document.getElementById('prevBtn').addEventListener('click', () => {
@@ -378,16 +418,29 @@ function bindEvents() {
     editingId = null;
     document.getElementById('sheetTitle').textContent = 'Add to day';
     showTypeFields(document.getElementById('entryType').value);
-    openSheet();
+    openSheet('entrySheet');
   });
 
-  document.getElementById('cancelBtn').addEventListener('click', closeSheet);
-  document.getElementById('overlay').addEventListener('click', closeSheet);
+  document.getElementById('cancelBtn').addEventListener('click', () => closeSheet('entrySheet'));
+  document.getElementById('overlay').addEventListener('click', () => {
+    closeSheet('entrySheet');
+    closeSheet('locationSheet');
+  });
   document.getElementById('entryForm').addEventListener('submit', saveEntry);
 
   document.getElementById('entryType').addEventListener('change', e => {
     showTypeFields(e.target.value);
   });
+
+  // Location bar
+  document.getElementById('locationBar').addEventListener('click', () => {
+    const current = document.getElementById('locationText').textContent;
+    document.getElementById('locationInput').value =
+      document.getElementById('locationText').classList.contains('empty') ? '' : current;
+    openSheet('locationSheet');
+  });
+  document.getElementById('cancelLocationBtn').addEventListener('click', () => closeSheet('locationSheet'));
+  document.getElementById('saveLocationBtn').addEventListener('click', saveLocation);
 
   bindSwipe();
 }

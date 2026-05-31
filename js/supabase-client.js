@@ -11,23 +11,31 @@ const TRIP_END   = '2026-07-19';
 
 function getTripDates() {
   const dates = [];
-  const cur = new Date(TRIP_START + 'T00:00:00');
-  const end = new Date(TRIP_END   + 'T00:00:00');
+  // Use UTC noon to avoid any timezone shifting the date
+  const [sy, sm, sd] = TRIP_START.split('-').map(Number);
+  const [ey, em, ed] = TRIP_END.split('-').map(Number);
+  const cur = new Date(Date.UTC(sy, sm - 1, sd, 12));
+  const end = new Date(Date.UTC(ey, em - 1, ed, 12));
   while (cur <= end) {
-    dates.push(cur.toISOString().split('T')[0]);
-    cur.setDate(cur.getDate() + 1);
+    const y = cur.getUTCFullYear();
+    const m = String(cur.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(cur.getUTCDate()).padStart(2, '0');
+    dates.push(`${y}-${m}-${d}`);
+    cur.setUTCDate(cur.getUTCDate() + 1);
   }
   return dates;
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  return date.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 function formatDateShort(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 }
 
 async function requireAuth() {
