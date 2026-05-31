@@ -501,5 +501,88 @@ function bindEvents() {
     });
   });
 
+  // Jump to date overlay
+  document.getElementById('jumpTrigger').addEventListener('click', openJumpOverlay);
+  document.getElementById('jumpCloseBtn').addEventListener('click', closeJumpOverlay);
+  document.getElementById('jumpOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('jumpOverlay')) closeJumpOverlay();
+  });
+
   bindSwipe();
+}
+
+// ── Jump to date overlay ──────────────────────────────────
+let gameDates = new Set();
+
+async function loadGameDates() {
+  const { data } = await db
+    .from('calendar_entries')
+    .select('date')
+    .eq('type', 'game');
+  gameDates = new Set((data || []).map(r => r.date));
+}
+
+async function openJumpOverlay() {
+  if (!gameDates.size) await loadGameDates();
+  buildJumpGrid();
+  document.getElementById('jumpOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeJumpOverlay() {
+  document.getElementById('jumpOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function buildJumpGrid() {
+  const grid = document.getElementById('jumpGrid');
+
+  // Group dates by month
+  const months = {};
+  DATES.forEach(date => {
+    const [y, m] = date.split('-');
+    const key = `${y}-${m}`;
+    if (!months[key]) months[key] = [];
+    months[key].push(date);
+  });
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  let html = '';
+  Object.entries(months).forEach(([key, dates]) => {
+    const [y, m] = key.split('-');
+    html += `<div class="jump-month-label">${monthNames[parseInt(m) - 1]} ${y}</div>`;
+    html += `<div class="jump-month-grid">`;
+    dates.forEach(date => {
+      const d = new Date(date + 'T12:00:00');
+      const dayNum = d.getUTCDate();
+      const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()];
+      const isActive = date === currentDate;
+      const isGame   = gameDates.has(date);
+      html += `
+        <button class="jump-day${isActive ? ' jump-day--active' : ''}${isGame ? ' jump-day--game' : ''}"
+                data-date="${date}">
+          <span class="jump-day__name">${dayName}</span>
+          <span class="jump-day__num">${dayNum}</span>
+        </button>`;
+    });
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.jump-day').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const date = btn.dataset.date;
+      const dir = date > currentDate ? 'right' : 'left';
+      closeJumpOverlay();
+      goToDate(date, dir);
+    });
+  });
+
+  // Scroll active day into view
+  requestAnimationFrame(() => {
+    const active = grid.querySelector('.jump-day--active');
+    if (active) active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
 }

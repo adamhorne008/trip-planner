@@ -12,7 +12,7 @@
   <div class="day-header">
     <div class="day-header__nav">
       <button id="prevBtn" title="Previous day">&#8592;</button>
-      <div class="day-header__date">
+      <div class="day-header__date" id="jumpTrigger" title="Jump to date" style="cursor:pointer;">
         <h2 id="dayTitle">Loading…</h2>
         <p id="daySubtitle"></p>
       </div>
@@ -236,6 +236,17 @@
     <div style="display:flex;gap:10px;margin-top:8px;">
       <button type="button" class="btn btn-ghost" id="cancelLocationBtn" style="flex:1">Cancel</button>
       <button type="button" class="btn btn-primary" id="saveLocationBtn" style="flex:2">Save</button>
+    </div>
+  </div>
+
+  <!-- Jump to Date Overlay -->
+  <div class="jump-overlay" id="jumpOverlay">
+    <div class="jump-overlay__panel">
+      <div class="jump-overlay__header">
+        <span class="jump-overlay__title">Jump to Date</span>
+        <button class="jump-overlay__close" id="jumpCloseBtn">✕</button>
+      </div>
+      <div class="jump-grid" id="jumpGrid"></div>
     </div>
   </div>
 

@@ -672,3 +672,138 @@ select option { background: #fff; }
 .tag-filter-btn.active {
   border-style: solid;
 }
+
+/* ── Jump to Date overlay ───────────────────────────────── */
+.day-header__date { text-align: center; }
+.day-header__date:hover h2 { text-decoration: underline dotted var(--muted); }
+
+.jump-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.jump-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.jump-overlay__panel {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+  transform: translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.jump-overlay.open .jump-overlay__panel {
+  transform: translateY(0);
+}
+.jump-overlay__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.jump-overlay__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.jump-overlay__close {
+  background: var(--surface2);
+  border: none;
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.jump-grid {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px 40px;
+}
+.jump-month-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 16px 0 8px;
+}
+.jump-month-label:first-child { margin-top: 0; }
+.jump-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.jump-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 2px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: var(--surface2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  min-height: 48px;
+  position: relative;
+}
+.jump-day__name {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.jump-day__num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.jump-day--active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+}
+.jump-day--active .jump-day__name,
+.jump-day--active .jump-day__num { color: #fff; }
+
+.jump-day--game {
+  border-color: var(--accent);
+}
+.jump-day--game .jump-day__num {
+  color: var(--accent);
+}
+.jump-day--game.jump-day--active .jump-day__num {
+  color: #fff;
+}
+.jump-day--game::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.jump-day--game.jump-day--active::after {
+  background: #fff;
+}
