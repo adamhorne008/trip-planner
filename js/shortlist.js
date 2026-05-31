@@ -113,6 +113,9 @@ function buildItemCard(item) {
   const tagsHtml = tags.length
     ? `<div class="shortlist-item__tags">${tags.map(t => `<span class="shortlist-tag">${t}</span>`).join('')}</div>`
     : '';
+  const datePill = item.date
+    ? `<span class="shortlist-date-pill">📅 ${formatDateShort(item.date)}</span>`
+    : '';
   return `
     <div class="shortlist-item">
       <div class="shortlist-item__name">${item.name}</div>
@@ -122,6 +125,7 @@ function buildItemCard(item) {
         ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener">🔗 Link</a>` : ''}
       </div>
       ${tagsHtml}
+      ${datePill}
       <div class="shortlist-item__actions">
         <button class="btn-assign" data-action="assign" data-id="${item.id}">＋ Add to day</button>
         <button data-action="edit"   data-id="${item.id}" style="background:var(--surface2);color:var(--muted);border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;border:none;">Edit</button>
@@ -143,6 +147,7 @@ function openAddItemSheet() {
   document.getElementById('itemSheetTitle').textContent = 'Add to shortlist';
   document.getElementById('itemForm').reset();
   document.getElementById('itemId').value = '';
+  document.getElementById('itemDate').value = '';
   selectedTags = [];
   document.getElementById('itemTags').value = '[]';
   syncTagPicker();
@@ -163,6 +168,7 @@ async function openEditItemSheet(id) {
   document.getElementById('itemId').value    = id;
   document.getElementById('itemName').value  = item.name || '';
   document.getElementById('itemLocation').value = item.location || '';
+  document.getElementById('itemDate').value  = item.date || '';
   document.getElementById('itemLink').value  = item.link || '';
   selectedTags = item.tags || [];
   document.getElementById('itemTags').value = JSON.stringify(selectedTags);
@@ -175,11 +181,13 @@ async function saveItem(e) {
   const btn = document.getElementById('saveItemBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
+  const dateVal = document.getElementById('itemDate').value;
   const payload = {
     name:     document.getElementById('itemName').value.trim(),
     location: document.getElementById('itemLocation').value.trim(),
     link:     document.getElementById('itemLink').value.trim(),
     tags:     selectedTags,
+    date:     dateVal || null,
   };
 
   let error;

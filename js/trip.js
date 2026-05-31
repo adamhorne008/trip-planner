@@ -80,7 +80,8 @@ async function loadDay(direction) {
       .select('*')
       .ilike('location', `%${dayLocation}%`)
       .order('created_at', { ascending: false });
-    nearbyItems = shortlist || [];
+    // Only show items with no date, or whose date matches today
+    nearbyItems = (shortlist || []).filter(i => !i.date || i.date === currentDate);
   }
 
   renderEntries(entriesRes.data || [], accomRes.data || [], nearbyItems, direction);

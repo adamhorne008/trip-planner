@@ -39,6 +39,7 @@ create table if not exists shortlist_items (
   link text,
   location text,
   tags text[] default '{}',
+  date date,
   created_at timestamptz default now()
 );
 
@@ -68,5 +69,6 @@ create policy "auth_all_checklist"      on checklist_items   for all using (auth
 -- Migrations (run if tables already exist)
 -- ============================================================
 -- alter table shortlist_items add column if not exists tags text[] default '{}';
+-- alter table shortlist_items add column if not exists date date;
 -- alter table accommodations drop column if exists check_in_time;
 -- alter table accommodations drop column if exists check_out_time;
