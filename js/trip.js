@@ -57,12 +57,13 @@ async function loadDay(direction) {
   const content = document.getElementById('dayContent');
   content.innerHTML = '<div class="spinner"></div>';
 
-  const [entriesRes, accomRes] = await Promise.all([
+  const [entriesRes, accomRes, locRes] = await Promise.all([
     db.from('calendar_entries').select('*').eq('date', currentDate)
       .order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
     db.from('accommodations').select('*')
       .lte('check_in_date', currentDate)
-      .gte('check_out_date', currentDate)
+      .gte('check_out_date', currentDate),
+    db.from('day_locations').select('location').eq('date', currentDate).maybeSingle()
   ]);
 
   if (entriesRes.error) {
@@ -70,14 +71,26 @@ async function loadDay(direction) {
     return;
   }
 
-  renderEntries(entriesRes.data || [], accomRes.data || [], direction);
+  // If a location is set for today, fetch shortlist items matching it
+  let nearbyItems = [];
+  const dayLocation = locRes.data?.location?.trim();
+  if (dayLocation) {
+    const { data: shortlist } = await db
+      .from('shortlist_items')
+      .select('*')
+      .ilike('location', `%${dayLocation}%`)
+      .order('created_at', { ascending: false });
+    nearbyItems = shortlist || [];
+  }
+
+  renderEntries(entriesRes.data || [], accomRes.data || [], nearbyItems, direction);
 }
 
 // ── Render ────────────────────────────────────────────────
-function renderEntries(entries, accommodations, direction) {
+function renderEntries(entries, accommodations, nearbyItems, direction) {
   const content = document.getElementById('dayContent');
 
-  if (!entries.length && !accommodations.length) {
+  if (!entries.length && !accommodations.length && !nearbyItems.length) {
     content.innerHTML = `
       <div class="empty-day">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -111,6 +124,21 @@ function renderEntries(entries, accommodations, direction) {
     groups[type].forEach(e => { html += buildEntryCard(e); });
   });
 
+  // Nearby shortlist section
+  if (nearbyItems.length) {
+    html += `<div class="nearby-shortlist">
+      <div class="nearby-shortlist__header">💡 Shortlist ideas nearby</div>
+      ${nearbyItems.map(item => `
+        <div class="nearby-shortlist__item">
+          <div>
+            <div class="nearby-shortlist__name">${item.name}</div>
+            <div class="nearby-shortlist__meta">${item.location ? `📍 ${item.location}` : ''}${item.link ? ` · <a href="${item.link}" target="_blank" rel="noopener" style="color:var(--accent2)">Link ↗</a>` : ''}</div>
+          </div>
+          <button class="nearby-shortlist__add" data-item-id="${item.id}">＋ Add</button>
+        </div>`).join('')}
+    </div>`;
+  }
+
   content.innerHTML = html;
   animateContent(content, direction);
 
@@ -119,6 +147,9 @@ function renderEntries(entries, accommodations, direction) {
   });
   content.querySelectorAll('.accom-card[data-id]').forEach(card => {
     card.addEventListener('click', () => openDetailSheet(card.dataset.id, 'accom'));
+  });
+  content.querySelectorAll('.nearby-shortlist__add').forEach(btn => {
+    btn.addEventListener('click', () => assignNearbyItem(btn.dataset.itemId));
   });
 }
 
@@ -235,6 +266,21 @@ async function deleteEntry(id, source) {
   const table = source === 'accom' ? 'accommodations' : 'calendar_entries';
   await db.from(table).delete().eq('id', id);
   closeSheet('detailSheet');
+  await loadDay();
+}
+
+// ── Assign nearby shortlist item to today ─────────────────
+async function assignNearbyItem(itemId) {
+  const { data: item } = await db.from('shortlist_items').select('*').eq('id', itemId).single();
+  if (!item) return;
+  const { error } = await db.from('calendar_entries').insert({
+    date:    currentDate,
+    type:    'activity',
+    title:   item.name,
+    details: { location: item.location || '', link: item.link || '' },
+  });
+  if (error) { alert(error.message); return; }
+  await db.from('shortlist_items').delete().eq('id', itemId);
   await loadDay();
 }
 

@@ -3,6 +3,8 @@
 // ============================================================
 
 let editingItemId = null;
+let allItems = [];
+let activeFilter = null; // null = show all
 
 // ── Init ──────────────────────────────────────────────────
 (async () => {
@@ -27,14 +29,53 @@ async function loadShortlist() {
     return;
   }
 
-  if (!items.length) {
+  allItems = items || [];
+  renderFilters();
+  renderGrid();
+}
+
+// ── Filters ───────────────────────────────────────────────
+function renderFilters() {
+  const container = document.getElementById('locationFilters');
+  // Collect unique, non-empty locations
+  const locations = [...new Set(
+    allItems.map(i => (i.location || '').trim()).filter(Boolean)
+  )].sort();
+
+  if (!locations.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const allBtn = `<button class="location-filter-btn${activeFilter === null ? ' active' : ''}" data-loc="">All</button>`;
+  const locBtns = locations.map(loc =>
+    `<button class="location-filter-btn${activeFilter === loc ? ' active' : ''}" data-loc="${loc}">${loc}</button>`
+  ).join('');
+  container.innerHTML = allBtn + locBtns;
+
+  container.querySelectorAll('.location-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.loc || null;
+      renderFilters();
+      renderGrid();
+    });
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('shortlistGrid');
+  const filtered = activeFilter
+    ? allItems.filter(i => (i.location || '').trim() === activeFilter)
+    : allItems;
+
+  if (!filtered.length) {
     grid.innerHTML = `<div class="empty-shortlist">
-      <p>No ideas yet.<br/>Tap + to add something you'd like to do.</p>
+      <p>${activeFilter ? `No items in ${activeFilter}.` : 'No ideas yet.<br/>Tap + to add something you\'d like to do.'}</p>
     </div>`;
     return;
   }
 
-  grid.innerHTML = items.map(buildItemCard).join('');
+  grid.innerHTML = filtered.map(buildItemCard).join('');
 
   grid.querySelectorAll('[data-action="edit"]').forEach(btn =>
     btn.addEventListener('click', () => openEditItemSheet(btn.dataset.id)));
@@ -43,6 +84,7 @@ async function loadShortlist() {
   grid.querySelectorAll('[data-action="assign"]').forEach(btn =>
     btn.addEventListener('click', () => openAssignSheet(btn.dataset.id)));
 }
+
 
 function buildItemCard(item) {
   return `

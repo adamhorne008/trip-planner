@@ -43,7 +43,7 @@ input, textarea, select {
   color: var(--text);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  font-size: 15px;
+  font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
   width: 100%;
   outline: none;
   transition: border-color 0.2s;
@@ -516,3 +516,81 @@ select option { background: #fff; }
 .mt-2 { margin-top: 8px; }
 .mt-3 { margin-top: 12px; }
 .w-full { width: 100%; }
+
+/* ── Location filters (shortlist page) ─────────────────── */
+.location-filters {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.location-filters::-webkit-scrollbar { display: none; }
+.location-filter-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.location-filter-btn.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+
+/* ── Location-matched shortlist (trip day view) ─────────── */
+.nearby-shortlist {
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-top: 2px solid var(--accent2);
+  border-radius: var(--radius);
+}
+.nearby-shortlist__header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent2);
+  margin-bottom: 10px;
+}
+.nearby-shortlist__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.nearby-shortlist__item:last-child { border-bottom: none; }
+.nearby-shortlist__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+.nearby-shortlist__meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.nearby-shortlist__add {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--accent2);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
