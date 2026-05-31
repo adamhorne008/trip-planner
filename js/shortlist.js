@@ -78,8 +78,9 @@ function renderFilters() {
 }
 
 function initGridListener() {
-  document.getElementById('shortlistGrid').addEventListener('click', e => {
-    const btn = e.target.closest('[data-action]');
+  // Use document-level delegation so clicks work regardless of scroll position or layout
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('#shortlistGrid [data-action]');
     if (!btn) return;
     const { action, id } = btn.dataset;
     if (action === 'edit')   openEditItemSheet(id);

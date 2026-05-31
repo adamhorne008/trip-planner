@@ -397,9 +397,15 @@ select option { background: #fff; }
 .shortlist-item__actions button {
   border: none;
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 12px;
   font-weight: 600;
+  width: auto;
+  min-height: unset;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 .btn-assign { background: rgba(26,158,69,0.1); color: var(--activity); }
 .btn-del    { background: rgba(200,16,46,0.08); color: var(--accent); }
