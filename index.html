@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Cup Trip 2026</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;">
+    <div class="spinner"></div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabase-client.js"></script>
+  <script>
+    (async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        // Go to today's date if within trip, otherwise first day
+        const today = new Date().toISOString().split('T')[0];
+        const dates = getTripDates();
+        const target = dates.includes(today) ? today : TRIP_START;
+        window.location.href = '/trip?date=' + target;
+      } else {
+        window.location.href = '/login';
+      }
+    })();
+  </script>
+</body>
+</html>
