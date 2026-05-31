@@ -61,7 +61,7 @@
 
       const { error } = await db.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin }
+        options: { emailRedirectTo: 'https://trip-planner-ten-gold.vercel.app' }
       });
 
       if (error) {
