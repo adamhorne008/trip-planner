@@ -188,8 +188,8 @@ function buildEntryCard(e) {
       if (d.home_team && d.away_team) meta += `<strong>${d.home_team} vs ${d.away_team}</strong>`;
       else if (d.home_team || d.away_team) meta += `<strong>${d.home_team || d.away_team}</strong>`;
       if (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
-      if (d.channel) meta += `<br/>📺 ${d.channel}`;
-      if (d.round) meta += `${d.channel ? ' · ' : '<br/>'}${d.round}`;
+      if (d.city) meta += `${meta ? ' · ' : ''}� ${d.city}`;
+      if (d.round) meta += `<br/>${d.round}`;
       break;
     case 'activity':
       if (d.location) meta += d.location;
@@ -246,7 +246,7 @@ async function openDetailSheet(id, source) {
         if (d.home_team && d.away_team) html += detailRow(`<strong>${d.home_team} vs ${d.away_team}</strong>`);
         if (d.round) html += detailRow(d.round);
         if (d.kickoff_time) html += detailRow(`Kick-off: <strong>${d.kickoff_time}</strong>`);
-        if (d.channel) html += detailRow(`📺 ${d.channel}`);
+        if (d.city) html += detailRow(`� ${d.city}`);
         break;
       case 'activity':
         if (d.location)    html += detailRow(`📍 ${d.location}`);
@@ -343,7 +343,7 @@ async function openEditSheet(id) {
       break;
     case 'watch':
       setVal('watchHome', d.home_team); setVal('watchAway', d.away_team);
-      setVal('watchKickoff', d.kickoff_time); setVal('watchChannel', d.channel);
+      setVal('watchKickoff', d.kickoff_time); setVal('watchCity', d.city);
       setVal('watchRound', d.round);
       break;
     case 'activity':
@@ -369,7 +369,11 @@ async function saveEntry(e) {
   btn.disabled = true; btn.textContent = 'Saving…';
 
   const type  = document.getElementById('entryType').value;
-  const title = document.getElementById('entryTitle').value.trim();
+  const home  = document.getElementById('watchHome')?.value || '';
+  const away  = document.getElementById('watchAway')?.value || '';
+  const title = type === 'watch'
+    ? `${home || '?'} vs ${away || '?'}`
+    : document.getElementById('entryTitle').value.trim();
   let error;
 
   if (type === 'accommodation') {
@@ -393,7 +397,7 @@ async function saveEntry(e) {
       case 'game':
         details = { home_team: document.getElementById('gameHome').value, away_team: document.getElementById('gameAway').value, venue: document.getElementById('gameVenue').value, city: document.getElementById('gameCity').value, kickoff_time: document.getElementById('gameKickoff').value, ticket_ref: document.getElementById('gameTicket').value }; break;
       case 'watch':
-        details = { home_team: document.getElementById('watchHome').value, away_team: document.getElementById('watchAway').value, kickoff_time: document.getElementById('watchKickoff').value, channel: document.getElementById('watchChannel').value, round: document.getElementById('watchRound').value }; break;
+        details = { home_team: document.getElementById('watchHome').value, away_team: document.getElementById('watchAway').value, kickoff_time: document.getElementById('watchKickoff').value, city: document.getElementById('watchCity').value, round: document.getElementById('watchRound').value }; break;
       case 'activity':
         details = { location: document.getElementById('actLocation').value, description: document.getElementById('actDescription').value, link: document.getElementById('actLink').value }; break;
       case 'note':
@@ -437,6 +441,9 @@ function showTypeFields(type) {
   document.querySelectorAll('.type-fields').forEach(el => el.classList.remove('active'));
   const el = document.getElementById(`fields-${type}`);
   if (el) el.classList.add('active');
+  // Watch type auto-generates its title — hide the title field
+  const titleGroup = document.getElementById('titleGroup');
+  if (titleGroup) titleGroup.style.display = type === 'watch' ? 'none' : '';
 }
 
 // ── Location ──────────────────────────────────────────────
