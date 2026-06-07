@@ -3,13 +3,7 @@
 // ============================================================
 
 const DATES = getTripDates();
-le        if (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
-      if (d.city) meta += `${meta ? ' · ' : ''}🏟 ${d.city}`;
-      if (d.round) meta += `<br/>${d.round}`;
-      break;
-    case 'activity':f (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
-      if (d.city) meta += `${meta ? ' · ' : ''}🏟️ ${d.city}`;
-      if (d.round) meta += `<br/>${d.round}`;urrentDate = '';
+let currentDate = '';
 let swipeStartX = 0, swipeStartY = 0;
 let editingId = null, editingType = null;
 
