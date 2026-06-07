@@ -3,7 +3,13 @@
 // ============================================================
 
 const DATES = getTripDates();
-let currentDate = '';
+le        if (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
+      if (d.city) meta += `${meta ? ' · ' : ''}🏟 ${d.city}`;
+      if (d.round) meta += `<br/>${d.round}`;
+      break;
+    case 'activity':f (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
+      if (d.city) meta += `${meta ? ' · ' : ''}🏟️ ${d.city}`;
+      if (d.round) meta += `<br/>${d.round}`;urrentDate = '';
 let swipeStartX = 0, swipeStartY = 0;
 let editingId = null, editingType = null;
 
@@ -106,7 +112,7 @@ function renderEntries(entries, accommodations, nearbyItems, direction) {
     return;
   }
 
-  const order  = ['travel', 'game', 'watch', 'activity', 'note'];
+  const order  = ['travel', 'game', 'activity', 'note', 'watch'];
   const labels = { travel: '✈️ Travel', game: '⚽ Games', watch: '📺 Watch List', activity: '🎯 Activities', note: '📝 Notes' };
   const groups = {};
   order.forEach(t => groups[t] = []);
@@ -188,7 +194,7 @@ function buildEntryCard(e) {
       if (d.home_team && d.away_team) meta += `<strong>${d.home_team} vs ${d.away_team}</strong>`;
       else if (d.home_team || d.away_team) meta += `<strong>${d.home_team || d.away_team}</strong>`;
       if (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
-      if (d.city) meta += `${meta ? ' · ' : ''}� ${d.city}`;
+      if (d.city) meta += `${meta ? ' · ' : ''}🏟 ${d.city}`;
       if (d.round) meta += `<br/>${d.round}`;
       break;
     case 'activity':
@@ -246,7 +252,7 @@ async function openDetailSheet(id, source) {
         if (d.home_team && d.away_team) html += detailRow(`<strong>${d.home_team} vs ${d.away_team}</strong>`);
         if (d.round) html += detailRow(d.round);
         if (d.kickoff_time) html += detailRow(`Kick-off: <strong>${d.kickoff_time}</strong>`);
-        if (d.city) html += detailRow(`� ${d.city}`);
+        if (d.city) html += detailRow(`🏟 ${d.city}`);
         break;
       case 'activity':
         if (d.location)    html += detailRow(`📍 ${d.location}`);
