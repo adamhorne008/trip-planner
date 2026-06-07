@@ -7,7 +7,7 @@
 create table if not exists calendar_entries (
   id uuid default gen_random_uuid() primary key,
   date date not null,
-  type text not null check (type in ('travel', 'game', 'activity', 'note')),
+  type text not null check (type in ('travel', 'game', 'watch', 'activity', 'note')),
   title text not null,
   details jsonb default '{}',
   sort_order int default 0,
@@ -72,3 +72,6 @@ create policy "auth_all_checklist"      on checklist_items   for all using (auth
 -- alter table shortlist_items add column if not exists date date;
 -- alter table accommodations drop column if exists check_in_time;
 -- alter table accommodations drop column if exists check_out_time;
+-- Add 'watch' type to calendar_entries constraint:
+-- alter table calendar_entries drop constraint if exists calendar_entries_type_check;
+-- alter table calendar_entries add constraint calendar_entries_type_check check (type in ('travel', 'game', 'watch', 'activity', 'note'));

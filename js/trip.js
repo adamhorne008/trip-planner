@@ -106,8 +106,8 @@ function renderEntries(entries, accommodations, nearbyItems, direction) {
     return;
   }
 
-  const order  = ['travel', 'game', 'activity', 'note'];
-  const labels = { travel: '✈️ Travel', game: '⚽ Games', activity: '🎯 Activities', note: '📝 Notes' };
+  const order  = ['travel', 'game', 'watch', 'activity', 'note'];
+  const labels = { travel: '✈️ Travel', game: '⚽ Games', watch: '📺 Watch List', activity: '🎯 Activities', note: '📝 Notes' };
   const groups = {};
   order.forEach(t => groups[t] = []);
   entries.forEach(e => { if (groups[e.type]) groups[e.type].push(e); });
@@ -184,6 +184,13 @@ function buildEntryCard(e) {
       if (d.venue) meta += `<br/>${d.venue}${d.city ? ', ' + d.city : ''}`;
       if (d.kickoff_time) meta += `<br/>Kick-off: ${d.kickoff_time}`;
       break;
+    case 'watch':
+      if (d.home_team && d.away_team) meta += `<strong>${d.home_team} vs ${d.away_team}</strong>`;
+      else if (d.home_team || d.away_team) meta += `<strong>${d.home_team || d.away_team}</strong>`;
+      if (d.kickoff_time) meta += `${meta ? ' · ' : ''}⏱ ${d.kickoff_time}`;
+      if (d.channel) meta += `<br/>📺 ${d.channel}`;
+      if (d.round) meta += `${d.channel ? ' · ' : '<br/>'}${d.round}`;
+      break;
     case 'activity':
       if (d.location) meta += d.location;
       if (d.description) meta += (meta ? '<br/>' : '') + d.description;
@@ -217,7 +224,7 @@ async function openDetailSheet(id, source) {
     const { data: e } = await db.from('calendar_entries').select('*').eq('id', id).single();
     if (!e) return;
     const d = e.details || {};
-    const typeColor = { travel: 'var(--travel)', game: 'var(--game)', activity: 'var(--activity)', note: 'var(--muted)' };
+    const typeColor = { travel: 'var(--travel)', game: 'var(--game)', watch: 'var(--watch)', activity: 'var(--activity)', note: 'var(--muted)' };
     document.getElementById('detailTitle').textContent = e.title;
     html += detailRow(e.type, true, typeColor[e.type] || 'var(--muted)');
     switch (e.type) {
@@ -234,6 +241,12 @@ async function openDetailSheet(id, source) {
         if (d.venue) html += detailRow(`📍 ${d.venue}${d.city ? ', ' + d.city : ''}`);
         if (d.kickoff_time) html += detailRow(`Kick-off: <strong>${d.kickoff_time}</strong>`);
         if (d.ticket_ref)   html += detailRow(`Ticket: <strong>${d.ticket_ref}</strong>`);
+        break;
+      case 'watch':
+        if (d.home_team && d.away_team) html += detailRow(`<strong>${d.home_team} vs ${d.away_team}</strong>`);
+        if (d.round) html += detailRow(d.round);
+        if (d.kickoff_time) html += detailRow(`Kick-off: <strong>${d.kickoff_time}</strong>`);
+        if (d.channel) html += detailRow(`📺 ${d.channel}`);
         break;
       case 'activity':
         if (d.location)    html += detailRow(`📍 ${d.location}`);
@@ -328,6 +341,11 @@ async function openEditSheet(id) {
       setVal('gameVenue', d.venue);    setVal('gameCity', d.city);
       setVal('gameKickoff', d.kickoff_time); setVal('gameTicket', d.ticket_ref);
       break;
+    case 'watch':
+      setVal('watchHome', d.home_team); setVal('watchAway', d.away_team);
+      setVal('watchKickoff', d.kickoff_time); setVal('watchChannel', d.channel);
+      setVal('watchRound', d.round);
+      break;
     case 'activity':
       setVal('actLocation', d.location); setVal('actDescription', d.description);
       setVal('actLink', d.link);
@@ -374,6 +392,8 @@ async function saveEntry(e) {
         details = { mode: document.getElementById('travelMode').value, from: document.getElementById('travelFrom').value, to: document.getElementById('travelTo').value, departure_time: document.getElementById('travelDep').value, arrival_time: document.getElementById('travelArr').value, confirmation: document.getElementById('travelRef').value, link: document.getElementById('travelLink').value }; break;
       case 'game':
         details = { home_team: document.getElementById('gameHome').value, away_team: document.getElementById('gameAway').value, venue: document.getElementById('gameVenue').value, city: document.getElementById('gameCity').value, kickoff_time: document.getElementById('gameKickoff').value, ticket_ref: document.getElementById('gameTicket').value }; break;
+      case 'watch':
+        details = { home_team: document.getElementById('watchHome').value, away_team: document.getElementById('watchAway').value, kickoff_time: document.getElementById('watchKickoff').value, channel: document.getElementById('watchChannel').value, round: document.getElementById('watchRound').value }; break;
       case 'activity':
         details = { location: document.getElementById('actLocation').value, description: document.getElementById('actDescription').value, link: document.getElementById('actLink').value }; break;
       case 'note':

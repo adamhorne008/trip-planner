@@ -17,6 +17,7 @@
   --game: #c8102e;
   --activity: #1a9e45;
   --accommodation: #d4700a;
+  --watch: #7c3aed;
   --note: #888;
   --radius: 12px;
   --radius-sm: 8px;
@@ -149,6 +150,7 @@ select option { background: #fff; }
 }
 .entry-card[data-type="travel"]        { border-left-color: var(--travel); }
 .entry-card[data-type="game"]          { border-left-color: var(--game); }
+.entry-card[data-type="watch"]         { border-left-color: var(--watch); }
 .entry-card[data-type="activity"]      { border-left-color: var(--activity); }
 .entry-card[data-type="accommodation"] { border-left-color: var(--accommodation); }
 .entry-card[data-type="note"]          { border-left-color: var(--note); }
@@ -162,6 +164,7 @@ select option { background: #fff; }
 }
 .entry-card[data-type="travel"]        .entry-card__type { color: var(--travel); }
 .entry-card[data-type="game"]          .entry-card__type { color: var(--game); }
+.entry-card[data-type="watch"]         .entry-card__type { color: var(--watch); }
 .entry-card[data-type="activity"]      .entry-card__type { color: var(--activity); }
 .entry-card[data-type="accommodation"] .entry-card__type { color: var(--accommodation); }
 .entry-card[data-type="note"]          .entry-card__type { color: var(--note); }

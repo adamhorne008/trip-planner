@@ -82,7 +82,8 @@
         <select id="entryType">
           <option value="accommodation">🏨 Accommodation</option>
           <option value="travel">✈️ Travel</option>
-          <option value="game">⚽ Game</option>
+          <option value="game">⚽ Game (attending)</option>
+          <option value="watch">📺 Watch Game</option>
           <option value="activity" selected>🎯 Activity</option>
           <option value="note">📝 Note</option>
         </select>
@@ -162,6 +163,43 @@
         <div class="form-group">
           <label>Ticket reference</label>
           <input type="text" id="gameTicket" placeholder="Ticket #" />
+        </div>
+      </div>
+
+      <!-- Watch game fields -->
+      <div class="type-fields" id="fields-watch">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Home team</label>
+            <input type="text" id="watchHome" placeholder="e.g. England" />
+          </div>
+          <div class="form-group">
+            <label>Away team</label>
+            <input type="text" id="watchAway" placeholder="e.g. France" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kick-off time</label>
+            <input type="time" id="watchKickoff" />
+          </div>
+          <div class="form-group">
+            <label>Channel / Platform</label>
+            <input type="text" id="watchChannel" placeholder="e.g. BBC, FOX, ITV" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Round</label>
+          <select id="watchRound">
+            <option value="">— select —</option>
+            <option value="Group Stage">Group Stage</option>
+            <option value="Round of 32">Round of 32</option>
+            <option value="Round of 16">Round of 16</option>
+            <option value="Quarter-final">Quarter-final</option>
+            <option value="Semi-final">Semi-final</option>
+            <option value="3rd Place">3rd Place Play-off</option>
+            <option value="Final">Final</option>
+          </select>
         </div>
       </div>
 
