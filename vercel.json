@@ -1,9 +1,28 @@
 {
   "rewrites": [
-    { "source": "/",         "destination": "/calendar.html" },
-    { "source": "/calendar", "destination": "/calendar.html" },
-    { "source": "/todos",    "destination": "/todos.html" },
-    { "source": "/roadmap",  "destination": "/roadmap.html" },
-    { "source": "/login",    "destination": "/login.html" }
+    {
+      "source": "/",
+      "destination": "/calendar.html"
+    },
+    {
+      "source": "/calendar",
+      "destination": "/calendar.html"
+    },
+    {
+      "source": "/todos",
+      "destination": "/todos.html"
+    },
+    {
+      "source": "/budget",
+      "destination": "/budget.html"
+    },
+    {
+      "source": "/roadmap",
+      "destination": "/roadmap.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    }
   ]
 }

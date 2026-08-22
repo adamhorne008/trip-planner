@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calendar — The Ridings</title>
+  <title>Budget — The Ridings</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="page">
 
-  <header class="cal-list-header">
-    <h1 class="cal-list-title">Calendar</h1>
+  <div class="budget-header">
+    <h1 class="budget-title">Budget</h1>
     <button class="user-avatar" id="userAvatar">A</button>
-  </header>
-
-  <div class="cal-list-body" id="calList">
-    <div class="spinner"></div>
   </div>
 
-  <button class="fab" id="fabBtn">+</button>
+  <div class="budget-body" id="budgetBody">
+    <div class="spinner"></div>
+  </div>
 
   <nav class="bottom-nav">
     <a href="/calendar" id="navCal">
@@ -48,46 +46,36 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Day entries sheet -->
-  <div class="sheet" id="daySheet">
+  <!-- Add / Edit item sheet -->
+  <div class="sheet" id="itemSheet">
     <div class="sheet__handle"></div>
-    <div class="sheet__title" id="daySheetTitle">Entries</div>
-    <div id="daySheetEntries" style="margin-bottom:16px;"></div>
-    <button class="btn btn-primary w-full" id="addEntryBtn">+ Add entry</button>
-    <button class="btn btn-ghost w-full" style="margin-top:8px;" id="closeDaySheetBtn">Close</button>
-  </div>
-
-  <!-- Add / Edit Entry -->
-  <div class="sheet" id="entrySheet">
-    <div class="sheet__handle"></div>
-    <div class="sheet__title" id="sheetTitle">Add entry</div>
-    <form id="entryForm">
-      <input type="hidden" id="entryId" />
+    <div class="sheet__title" id="itemSheetTitle">Add item</div>
+    <form id="itemForm">
+      <input type="hidden" id="itemId" />
+      <input type="hidden" id="itemType" />
+      <input type="hidden" id="itemSection" />
       <div class="form-group">
-        <label>Title</label>
-        <input type="text" id="entryTitle" placeholder="What's happening?" required />
+        <label>Label</label>
+        <input type="text" id="itemLabel" placeholder="e.g. Mortgage, Salary…" required />
       </div>
       <div class="form-group">
-        <label>Notes</label>
-        <textarea id="entryNotes" rows="3" placeholder="Any details…"></textarea>
+        <label>Amount (£)</label>
+        <input type="number" id="itemAmount" placeholder="0.00" min="0" step="0.01" required />
+      </div>
+      <div class="form-group">
+        <label>Frequency</label>
+        <select id="itemFrequency">
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+          <option value="annual">Annual</option>
+        </select>
       </div>
       <div class="form-actions">
-        <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+        <button type="button" class="btn btn-ghost" id="cancelItemBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveItemBtn">Save</button>
       </div>
     </form>
-  </div>
-
-  <!-- Detail -->
-  <div class="sheet" id="detailSheet">
-    <div class="sheet__handle"></div>
-    <div class="sheet__title" id="detailTitle"></div>
-    <div id="detailBody" style="margin-bottom:20px;"></div>
-    <div style="display:flex;gap:10px;">
-      <button type="button" class="btn btn-danger"    id="detailDeleteBtn" style="flex:1">Delete</button>
-      <button type="button" class="btn btn-secondary" id="detailEditBtn"   style="flex:1">Edit</button>
-      <button type="button" class="btn btn-ghost"     id="detailCloseBtn"  style="flex:1">Close</button>
-    </div>
+    <button type="button" class="btn btn-danger w-full" id="deleteItemBtn" style="margin-top:8px;display:none;">Delete</button>
   </div>
 
   <!-- User -->
@@ -99,6 +87,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabase-client.js"></script>
-  <script src="/js/calendar.js"></script>
+  <script src="/js/budget.js"></script>
 </body>
 </html>

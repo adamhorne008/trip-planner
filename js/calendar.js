@@ -1,10 +1,15 @@
 // ============================================================
-// calendar.js — The Ridings
+// calendar.js — The Ridings (scrollable list view)
 // ============================================================
 
-let currentDate = '';
 let currentUser = 'Adam';
+let selectedDate = null;
 let editingId = null;
+let allEntries = [];
+
+// How many months back/forward to show
+const MONTHS_BACK    = 3;
+const MONTHS_FORWARD = 12;
 
 (async () => {
   await requireAuth();
@@ -17,79 +22,136 @@ let editingId = null;
   document.getElementById('userSheetName').textContent = 'Signed in as ' + currentUser;
   document.getElementById('navCal').classList.add('active');
 
-  const params = new URLSearchParams(window.location.search);
-  currentDate = params.get('date') || todayISO();
-
-  renderHeader();
-  await loadDay();
+  await loadAllEntries();
+  renderList();
   bindEvents();
+  scrollToToday();
 })();
 
-function renderHeader() {
-  const d = new Date(currentDate + 'T12:00:00');
-  const isToday = currentDate === todayISO();
-  document.getElementById('dayTitle').textContent = d.toLocaleDateString('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long'
-  });
-  document.getElementById('daySubtitle').textContent = isToday
-    ? 'Today · ' + d.getFullYear()
-    : d.getFullYear().toString();
-  history.replaceState({}, '', '/calendar?date=' + currentDate);
-}
-
-async function loadDay(direction) {
-  const content = document.getElementById('dayContent');
-  content.innerHTML = '<div class="spinner"></div>';
-  const { data: entries } = await db
+async function loadAllEntries() {
+  const start = addDays(todayISO(), -(MONTHS_BACK * 31));
+  const end   = addDays(todayISO(),  (MONTHS_FORWARD * 31));
+  const { data } = await db
     .from('calendar_entries')
     .select('*')
-    .eq('date', currentDate)
-    .order('created_at', { ascending: true });
-  renderEntries(entries || [], direction);
+    .gte('date', start)
+    .lte('date', end)
+    .order('date', { ascending: true });
+  allEntries = data || [];
 }
 
-function renderEntries(entries, direction) {
-  const content = document.getElementById('dayContent');
+function entriesForDate(dateStr) {
+  return allEntries.filter(e => e.date === dateStr);
+}
+
+function buildDateRange() {
+  const today = todayISO();
+  const start = addDays(today, -(MONTHS_BACK * 31));
+  const end   = addDays(today,  (MONTHS_FORWARD * 31));
+  const dates = [];
+  let cur = start;
+  while (cur <= end) {
+    dates.push(cur);
+    cur = addDays(cur, 1);
+  }
+  return dates;
+}
+
+function renderList() {
+  const container = document.getElementById('calList');
+  const today = todayISO();
+  const dates = buildDateRange();
+
+  // Group by month
+  const months = {};
+  for (const d of dates) {
+    const key = d.slice(0, 7); // YYYY-MM
+    if (!months[key]) months[key] = [];
+    months[key].push(d);
+  }
+
+  let html = '';
+  for (const [monthKey, monthDates] of Object.entries(months)) {
+    const label = new Date(monthKey + '-01T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    html += `<div class="cal-month-header" data-month="${monthKey}">${label}</div>`;
+    for (const d of monthDates) {
+      const entries = entriesForDate(d);
+      const dt = new Date(d + 'T12:00:00');
+      const dayName = dt.toLocaleDateString('en-GB', { weekday: 'short' });
+      const dayNum  = dt.getDate();
+      const isToday = d === today;
+      const isWeekend = dt.getDay() === 0 || dt.getDay() === 6;
+
+      const dots = entries.map(e => {
+        const who = e.created_by ? e.created_by.toLowerCase() : 'both';
+        return `<span class="cal-dot cal-dot--${who}" title="${e.title}"></span>`;
+      }).join('');
+
+      html += `
+        <div class="cal-date-row${isToday ? ' cal-date-row--today' : ''}${isWeekend ? ' cal-date-row--weekend' : ''}" data-date="${d}">
+          <div class="cal-date-row__left">
+            <span class="cal-date-row__num${isToday ? ' cal-date-row__num--today' : ''}">${dayNum}</span>
+            <span class="cal-date-row__day">${dayName}</span>
+          </div>
+          <div class="cal-date-row__dots">${dots}</div>
+        </div>`;
+    }
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.cal-date-row').forEach(row => {
+    row.addEventListener('click', () => openDaySheet(row.dataset.date));
+  });
+}
+
+function scrollToToday() {
+  const today = todayISO();
+  const el = document.querySelector(`.cal-date-row[data-date="${today}"]`);
+  if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+// ── Day sheet ──
+
+function openDaySheet(dateStr) {
+  selectedDate = dateStr;
+  const dt = new Date(dateStr + 'T12:00:00');
+  document.getElementById('daySheetTitle').textContent =
+    dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  renderDaySheetEntries(dateStr);
+  openSheet('daySheet');
+}
+
+function renderDaySheetEntries(dateStr) {
+  const entries = entriesForDate(dateStr);
+  const container = document.getElementById('daySheetEntries');
   if (!entries.length) {
-    content.innerHTML = `
-      <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-        <p>Nothing here yet.<br>Tap + to add an entry.</p>
-      </div>`;
-  } else {
-    content.innerHTML = entries.map(buildEntryCard).join('');
-    content.querySelectorAll('.cal-card[data-id]').forEach(card => {
-      card.addEventListener('click', () => openDetail(card.dataset.id));
-    });
+    container.innerHTML = '<p style="color:var(--muted);font-size:14px;text-align:center;padding:8px 0;">No entries yet.</p>';
+    return;
   }
-  if (direction) {
-    content.classList.add('slide-in-' + direction);
-    setTimeout(() => content.classList.remove('slide-in-' + direction), 300);
-  }
+  container.innerHTML = entries.map(e => `
+    <div class="cal-card cal-card--${(e.created_by||'both').toLowerCase()}" data-id="${e.id}" style="cursor:pointer;">
+      <div class="cal-card__header">
+        <div class="cal-card__title">${e.title}</div>
+        <span class="author-tag author-tag--${(e.created_by||'both').toLowerCase()}">${e.created_by || ''}</span>
+      </div>
+      ${e.notes ? `<div class="cal-card__notes">${e.notes}</div>` : ''}
+    </div>`).join('');
+
+  container.querySelectorAll('.cal-card[data-id]').forEach(card => {
+    card.addEventListener('click', () => openDetail(card.dataset.id));
+  });
 }
 
-function buildEntryCard(e) {
-  return `<div class="cal-card cal-card--${e.created_by.toLowerCase()}" data-id="${e.id}">
-    <div class="cal-card__header">
-      <div class="cal-card__title">${e.title}</div>
-      <span class="author-tag author-tag--${e.created_by.toLowerCase()}">${e.created_by}</span>
-    </div>
-    ${e.notes ? `<div class="cal-card__notes">${e.notes}</div>` : ''}
-  </div>`;
-}
+// ── Detail ──
 
 async function openDetail(id) {
-  const { data: e } = await db.from('calendar_entries').select('*').eq('id', id).single();
+  const e = allEntries.find(x => x.id === id);
   if (!e) return;
   document.getElementById('detailTitle').textContent = e.title;
   document.getElementById('detailBody').innerHTML = `
     <div style="margin-bottom:10px;">
-      <span class="author-tag author-tag--${e.created_by.toLowerCase()}">${e.created_by}</span>
+      <span class="author-tag author-tag--${(e.created_by||'both').toLowerCase()}">${e.created_by || ''}</span>
     </div>
     ${e.notes ? `<p style="font-size:14px;color:var(--text);line-height:1.6;">${e.notes}</p>` : ''}`;
   document.getElementById('detailDeleteBtn').dataset.id = id;
@@ -100,9 +162,14 @@ async function openDetail(id) {
 async function deleteEntry(id) {
   if (!confirm('Delete this entry?')) return;
   await db.from('calendar_entries').delete().eq('id', id);
+  allEntries = allEntries.filter(e => e.id !== id);
   closeSheet('detailSheet');
-  loadDay();
+  closeSheet('daySheet');
+  renderList();
+  if (selectedDate) openDaySheet(selectedDate);
 }
+
+// ── Add / Edit ──
 
 function openAddSheet() {
   editingId = null;
@@ -112,7 +179,7 @@ function openAddSheet() {
 }
 
 async function openEditSheet(id) {
-  const { data: e } = await db.from('calendar_entries').select('*').eq('id', id).single();
+  const e = allEntries.find(x => x.id === id);
   if (!e) return;
   editingId = id;
   document.getElementById('sheetTitle').textContent = 'Edit entry';
@@ -126,29 +193,32 @@ async function saveEntry(ev) {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   const payload = {
-    date: currentDate,
+    date: selectedDate,
     title: document.getElementById('entryTitle').value.trim(),
     notes: document.getElementById('entryNotes').value.trim() || null,
     created_by: currentUser,
   };
-  let error;
+  let error, data;
   if (editingId) {
-    ({ error } = await db.from('calendar_entries').update(payload).eq('id', editingId));
+    ({ error, data } = await db.from('calendar_entries').update(payload).eq('id', editingId).select().single());
+    if (!error && data) {
+      const idx = allEntries.findIndex(e => e.id === editingId);
+      if (idx !== -1) allEntries[idx] = data;
+    }
   } else {
-    ({ error } = await db.from('calendar_entries').insert(payload));
+    ({ error, data } = await db.from('calendar_entries').insert(payload).select().single());
+    if (!error && data) allEntries.push(data);
   }
   btn.disabled = false; btn.textContent = 'Save';
   if (error) { alert(error.message); return; }
   closeSheet('entrySheet');
-  loadDay();
+  renderList();
+  if (selectedDate) {
+    renderDaySheetEntries(selectedDate);
+  }
 }
 
-function goToDate(date) {
-  const dir = date > currentDate ? 'right' : 'left';
-  currentDate = date;
-  renderHeader();
-  loadDay(dir);
-}
+// ── Sheet helpers ──
 
 function openSheet(id) {
   document.getElementById('overlay').classList.add('open');
@@ -161,21 +231,20 @@ function closeSheet(id) {
   if (id === 'entrySheet') { editingId = null; document.getElementById('entryForm').reset(); }
 }
 
+// ── Bind events ──
+
 function bindEvents() {
-  document.getElementById('prevBtn').addEventListener('click', () => goToDate(addDays(currentDate, -1)));
-  document.getElementById('nextBtn').addEventListener('click', () => goToDate(addDays(currentDate,  1)));
-
-  document.getElementById('dateBtn').addEventListener('click', () => {
-    const dp = document.getElementById('datePicker');
-    dp.value = currentDate;
-    try { dp.showPicker(); } catch(e) {}
-    dp.focus();
-  });
-  document.getElementById('datePicker').addEventListener('change', function() {
-    if (this.value) goToDate(this.value);
+  document.getElementById('fabBtn').addEventListener('click', () => {
+    selectedDate = todayISO();
+    openAddSheet();
   });
 
-  document.getElementById('fabBtn').addEventListener('click', openAddSheet);
+  document.getElementById('addEntryBtn').addEventListener('click', () => {
+    closeSheet('daySheet');
+    openAddSheet();
+  });
+
+  document.getElementById('closeDaySheetBtn').addEventListener('click', () => closeSheet('daySheet'));
   document.getElementById('cancelBtn').addEventListener('click', () => closeSheet('entrySheet'));
   document.getElementById('entryForm').addEventListener('submit', saveEntry);
 
@@ -193,14 +262,4 @@ function bindEvents() {
   document.getElementById('overlay').addEventListener('click', () => {
     document.querySelectorAll('.sheet.open').forEach(s => closeSheet(s.id));
   });
-
-  // Swipe
-  let sx = 0, sy = 0;
-  const c = document.getElementById('dayContent');
-  c.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
-  c.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - sx;
-    const dy = e.changedTouches[0].clientY - sy;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) goToDate(addDays(currentDate, dx < 0 ? 1 : -1));
-  }, { passive: true });
 }

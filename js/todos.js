@@ -48,7 +48,7 @@ async function loadRoadmapTasks() {
 function renderTodos() {
   const today = todayISO();
   let filtered = allTodos;
-  if (activeFilter === 'mine')     filtered = allTodos.filter(t => t.assigned_to === currentUser || t.assigned_to === 'Both');
+  // 'mine' filter removed
   if (activeFilter === 'adam')     filtered = allTodos.filter(t => t.assigned_to === 'Adam'     || t.assigned_to === 'Both');
   if (activeFilter === 'kayleigh') filtered = allTodos.filter(t => t.assigned_to === 'Kayleigh' || t.assigned_to === 'Both');
 
