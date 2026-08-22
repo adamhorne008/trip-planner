@@ -3,78 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In — World Cup Trip</title>
+  <title>The Ridings</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <div class="login-page">
-    <div class="login-logo">
-      <h1>⚽ World Cup Trip</h1>
-      <p>USA 2026 · 14 Jun – 19 Jul</p>
-    </div>
-
-    <div class="login-card">
-      <h2>Sign in</h2>
-      <p>Enter your email and we'll send you a magic link.</p>
-
-      <div id="alert" class="alert"></div>
-
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="email">Email address</label>
-          <input type="email" id="email" placeholder="you@example.com" required autocomplete="email" />
-        </div>
-        <button type="submit" class="btn btn-primary w-full mt-2" id="submitBtn">
-          Send magic link
-        </button>
-      </form>
-    </div>
+<div class="login-page">
+  <div class="login-logo">
+    <h1>The Ridings</h1>
+    <p>Home renovation planner for Adam &amp; Kayleigh</p>
   </div>
-
+  <div class="login-card">
+    <h2>Sign in</h2>
+    <p>Enter your email and we'll send a magic link.</p>
+    <div class="alert" id="alert"></div>
+    <div class="form-group">
+      <label>Email address</label>
+      <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email" />
+    </div>
+    <button type="button" class="btn btn-primary w-full" id="loginBtn">Send magic link</button>
+  </div>
+</div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabase-client.js"></script>
-  <script>
-    // If already logged in, redirect
-    db.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/trip?date=' + TRIP_START;
-    });
+<script>
+(async () => {
+  const { data: { session } } = await db.auth.getSession();
+  if (session) { window.location.href = '/calendar'; return; }
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) window.location.href = '/calendar';
+  });
+})();
 
-    // Handle auth callback (magic link)
-    db.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const today = new Date().toISOString().split('T')[0];
-        const dates = getTripDates();
-        const target = dates.includes(today) ? today : TRIP_START;
-        window.location.href = '/trip?date=' + target;
-      }
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const btn   = document.getElementById('submitBtn');
-      const alert = document.getElementById('alert');
-
-      btn.disabled = true;
-      btn.textContent = 'Sending…';
-      alert.className = 'alert';
-
-      const { error } = await db.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: 'https://trip-planner-ten-gold.vercel.app' }
-      });
-
-      if (error) {
-        alert.textContent = error.message;
-        alert.className = 'alert error';
-        btn.disabled = false;
-        btn.textContent = 'Send magic link';
-      } else {
-        alert.textContent = '✓ Magic link sent! Check your inbox.';
-        alert.className = 'alert success';
-        btn.textContent = 'Link sent';
-      }
-    });
-  </script>
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  const alertEl = document.getElementById('alert');
+  alertEl.className = 'alert';
+  if (!email) { alertEl.textContent = 'Please enter your email.'; alertEl.className = 'alert error'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const { error } = await db.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: 'https://trip-planner-ten-gold.vercel.app/calendar' }
+  });
+  btn.disabled = false; btn.textContent = 'Send magic link';
+  if (error) { alertEl.textContent = error.message; alertEl.className = 'alert error'; }
+  else { alertEl.textContent = 'Check your inbox for the magic link!'; alertEl.className = 'alert success'; }
+});
+</script>
 </body>
 </html>

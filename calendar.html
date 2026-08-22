@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendar — The Ridings</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="page">
+
+  <header class="cal-header">
+    <button class="cal-nav-btn" id="prevBtn">&#8592;</button>
+    <button class="cal-date-btn" id="dateBtn">
+      <div class="cal-date-main" id="dayTitle">Loading…</div>
+      <div class="cal-date-sub"  id="daySubtitle"></div>
+    </button>
+    <button class="cal-nav-btn" id="nextBtn">&#8594;</button>
+    <button class="user-avatar" id="userAvatar">A</button>
+  </header>
+
+  <input type="date" id="datePicker" />
+
+  <div class="cal-content" id="dayContent">
+    <div class="spinner"></div>
+  </div>
+
+  <button class="fab" id="fabBtn">+</button>
+
+  <nav class="bottom-nav">
+    <a href="/calendar" id="navCal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>Calendar
+    </a>
+    <a href="/todos" id="navTodos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>Todos
+    </a>
+    <a href="/roadmap" id="navRoadmap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3"  width="9" height="5" rx="1"/>
+        <rect x="2" y="10" width="14" height="5" rx="1"/>
+        <rect x="2" y="17" width="6"  height="5" rx="1"/>
+      </svg>Roadmap
+    </a>
+  </nav>
+
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Add / Edit Entry -->
+  <div class="sheet" id="entrySheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title" id="sheetTitle">Add entry</div>
+    <form id="entryForm">
+      <input type="hidden" id="entryId" />
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="entryTitle" placeholder="What's happening?" required />
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="entryNotes" rows="3" placeholder="Any details…"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Detail -->
+  <div class="sheet" id="detailSheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title" id="detailTitle"></div>
+    <div id="detailBody" style="margin-bottom:20px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="btn btn-danger"    id="detailDeleteBtn" style="flex:1">Delete</button>
+      <button type="button" class="btn btn-secondary" id="detailEditBtn"   style="flex:1">Edit</button>
+      <button type="button" class="btn btn-ghost"     id="detailCloseBtn"  style="flex:1">Close</button>
+    </div>
+  </div>
+
+  <!-- User -->
+  <div class="sheet" id="userSheet">
+    <div class="sheet__handle"></div>
+    <div class="sheet__title" id="userSheetName">Signed in</div>
+    <button type="button" class="btn btn-ghost w-full" id="signOutBtn">Sign out</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/supabase-client.js"></script>
+  <script src="/js/calendar.js"></script>
+</body>
+</html>

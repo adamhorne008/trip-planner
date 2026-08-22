@@ -1,10 +1,9 @@
 {
-  "cleanUrls": true,
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/trip", "destination": "/trip.html" },
-    { "source": "/shortlist", "destination": "/shortlist.html" },
-    { "source": "/checklist", "destination": "/checklist.html" }
+    { "source": "/",         "destination": "/calendar.html" },
+    { "source": "/calendar", "destination": "/calendar.html" },
+    { "source": "/todos",    "destination": "/todos.html" },
+    { "source": "/roadmap",  "destination": "/roadmap.html" },
+    { "source": "/login",    "destination": "/login.html" }
   ]
 }
