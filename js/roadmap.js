@@ -115,7 +115,8 @@ function buildTimelineHeader(totalDays, tlWidth) {
   while (cursor < timelineEnd) {
     const d = new Date(cursor + 'T12:00:00');
     const nextMonthDate = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-    const nextMonth = nextMonthDate.toISOString().slice(0, 10);
+    const nextMonth = nextMonthDate.getFullYear() + '-' +
+      String(nextMonthDate.getMonth() + 1).padStart(2, '0') + '-01';
     const monthEnd  = nextMonth < timelineEnd ? nextMonth : timelineEnd;
     const monthLeft  = daysBetween(timelineStart, cursor) * DAY_PX;
     const monthWidth = daysBetween(cursor, monthEnd) * DAY_PX;
