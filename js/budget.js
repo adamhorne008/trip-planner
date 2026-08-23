@@ -7,13 +7,17 @@ let editingItemId = null;
 let allItems = [];
 
 const SECTIONS = [
-  { key: 'adam-income',     label: "Adam's Income",        type: 'income'  },
-  { key: 'kayleigh-income', label: "Kayleigh's Income",    type: 'income'  },
-  { key: 'other-income',    label: 'Other Income',          type: 'income'  },
-  { key: 'ridings',         label: 'The Ridings Outgoings', type: 'expense' },
-  { key: 'whitfield',       label: 'Whitfield Outgoings',   type: 'expense' },
-  { key: 'general',         label: 'General Outgoings',     type: 'expense' },
+  { key: 'adam_income',     label: "Adam's Income",         type: 'income'  },
+  { key: 'kayleigh_income', label: "Kayleigh's Income",     type: 'income'  },
+  { key: 'other_income',    label: 'Other Income',           type: 'income'  },
+  { key: 'ridings_out',     label: 'The Ridings Outgoings',  type: 'expense' },
+  { key: 'whitfield_out',   label: 'Whitfield Outgoings',    type: 'expense' },
+  { key: 'general_out',     label: 'General Outgoings',      type: 'expense' },
 ];
+
+function sectionType(key) {
+  return key.endsWith('_income') ? 'income' : 'expense';
+}
 
 (async () => {
   await requireAuth();
@@ -37,9 +41,9 @@ async function loadItems() {
 }
 
 function toMonthly(amount, frequency) {
-  if (frequency === 'weekly')  return amount * 52 / 12;
-  if (frequency === 'annual')  return amount / 12;
-  return amount;
+  if (frequency === 'weekly') return amount * 52 / 12;
+  if (frequency === 'annual') return amount / 12;
+  return amount; // monthly or null/undefined → treat as monthly
 }
 
 function formatGBP(n) {
@@ -50,7 +54,6 @@ function renderBudget() {
   const body = document.getElementById('budgetBody');
   let html = '';
 
-  // Income sections
   html += '<div class="budget-section-group">';
   html += '<div class="budget-group-label">Income</div>';
   for (const sec of SECTIONS.filter(s => s.type === 'income')) {
@@ -58,7 +61,6 @@ function renderBudget() {
   }
   html += '</div>';
 
-  // Expense sections
   html += '<div class="budget-section-group">';
   html += '<div class="budget-group-label">Outgoings</div>';
   for (const sec of SECTIONS.filter(s => s.type === 'expense')) {
@@ -66,9 +68,10 @@ function renderBudget() {
   }
   html += '</div>';
 
-  // Totals
-  const totalIncome  = allItems.filter(i => i.type === 'income') .reduce((s,i) => s + toMonthly(i.amount, i.frequency), 0);
-  const totalExpense = allItems.filter(i => i.type === 'expense').reduce((s,i) => s + toMonthly(i.amount, i.frequency), 0);
+  const totalIncome  = allItems.filter(i => sectionType(i.section) === 'income')
+    .reduce((s, i) => s + toMonthly(i.amount, i.frequency), 0);
+  const totalExpense = allItems.filter(i => sectionType(i.section) === 'expense')
+    .reduce((s, i) => s + toMonthly(i.amount, i.frequency), 0);
   const diff = totalIncome - totalExpense;
 
   html += `
@@ -94,24 +97,37 @@ function renderBudget() {
     el.addEventListener('click', () => openEditItem(el.dataset.id));
   });
   body.querySelectorAll('.budget-add-btn[data-section]').forEach(btn => {
-    btn.addEventListener('click', () => openAddItem(btn.dataset.section, btn.dataset.type));
+    btn.addEventListener('click', () => openAddItem(btn.dataset.section));
   });
 }
 
 function renderSection(sec) {
-  const items = allItems.filter(i => i.section === sec.key);
-  const total = items.reduce((s, i) => s + toMonthly(i.amount, i.frequency), 0);
   const freqLabel = { monthly: '/mo', weekly: '/wk', annual: '/yr' };
 
-  const itemsHtml = items.map(i => `
+  // Sort by monthly amount descending
+  const items = allItems
+    .filter(i => i.section === sec.key)
+    .sort((a, b) => toMonthly(b.amount, b.frequency) - toMonthly(a.amount, a.frequency));
+
+  const total = items.reduce((s, i) => s + toMonthly(i.amount, i.frequency), 0);
+  const isGeneral = sec.key === 'general_out';
+
+  const itemsHtml = items.map(i => {
+    const assigneeTag = isGeneral && i.assigned_to
+      ? `<span class="author-tag author-tag--${i.assigned_to.toLowerCase()}" style="font-size:10px;margin-left:6px;">${i.assigned_to}</span>`
+      : '';
+    return `
     <div class="budget-item" data-id="${i.id}">
-      <div class="budget-item__label">${i.label}</div>
+      <div class="budget-item__label">${i.name}${assigneeTag}</div>
       <div class="budget-item__right">
         <span class="budget-item__amount">${formatGBP(i.amount)}</span>
-        <span class="budget-item__freq">${freqLabel[i.frequency] || '/mo'}</span>
-        <span class="budget-item__monthly">(${formatGBP(toMonthly(i.amount, i.frequency))}/mo)</span>
+        <span class="budget-item__freq">${freqLabel[i.frequency || 'monthly']}</span>
+        ${i.frequency && i.frequency !== 'monthly'
+          ? `<span class="budget-item__monthly">(${formatGBP(toMonthly(i.amount, i.frequency))}/mo)</span>`
+          : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   return `
     <div class="budget-section">
@@ -120,17 +136,19 @@ function renderSection(sec) {
         <span class="budget-section__total">${formatGBP(total)}/mo</span>
       </div>
       ${itemsHtml}
-      <button class="budget-add-btn" data-section="${sec.key}" data-type="${sec.type}">+ Add</button>
+      <button class="budget-add-btn" data-section="${sec.key}">+ Add</button>
     </div>`;
 }
 
-function openAddItem(section, type) {
+function openAddItem(section) {
   editingItemId = null;
   document.getElementById('itemSheetTitle').textContent = 'Add item';
   document.getElementById('itemForm').reset();
   document.getElementById('itemSection').value = section;
-  document.getElementById('itemType').value = type;
   document.getElementById('deleteItemBtn').style.display = 'none';
+  // Show assigned_to only for general outgoings
+  document.getElementById('assignedToGroup').style.display =
+    section === 'general_out' ? '' : 'none';
   openSheet('itemSheet');
 }
 
@@ -139,12 +157,13 @@ function openEditItem(id) {
   if (!item) return;
   editingItemId = id;
   document.getElementById('itemSheetTitle').textContent = 'Edit item';
-  document.getElementById('itemId').value = id;
   document.getElementById('itemSection').value = item.section;
-  document.getElementById('itemType').value = item.type;
-  document.getElementById('itemLabel').value = item.label;
+  document.getElementById('itemName').value = item.name;
   document.getElementById('itemAmount').value = item.amount;
-  document.getElementById('itemFrequency').value = item.frequency;
+  document.getElementById('itemFrequency').value = item.frequency || 'monthly';
+  document.getElementById('assignedToGroup').style.display =
+    item.section === 'general_out' ? '' : 'none';
+  document.getElementById('itemAssignedTo').value = item.assigned_to || '';
   document.getElementById('deleteItemBtn').style.display = '';
   openSheet('itemSheet');
 }
@@ -154,12 +173,15 @@ async function saveItem(ev) {
   const btn = document.getElementById('saveItemBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
+  const section = document.getElementById('itemSection').value;
   const payload = {
-    section:   document.getElementById('itemSection').value,
-    type:      document.getElementById('itemType').value,
-    label:     document.getElementById('itemLabel').value.trim(),
+    section,
+    name:      document.getElementById('itemName').value.trim(),
     amount:    parseFloat(document.getElementById('itemAmount').value),
     frequency: document.getElementById('itemFrequency').value,
+    assigned_to: section === 'general_out'
+      ? (document.getElementById('itemAssignedTo').value || null)
+      : null,
   };
 
   let error, data;

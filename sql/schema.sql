@@ -55,9 +55,15 @@ create table if not exists budget_items (
      'ridings_out','whitfield_out','general_out')),
   name text not null,
   amount numeric(10,2) not null default 0,
+  frequency text not null default 'monthly' check (frequency in ('monthly','weekly','annual')),
+  assigned_to text check (assigned_to in ('Adam','Kayleigh')),
   created_at timestamptz default now()
 );
 alter table budget_items enable row level security;
 create policy "auth_all_budget" on budget_items
   for all using (auth.role()='authenticated')
   with check (auth.role()='authenticated');
+
+-- Run these if you already created budget_items without frequency/assigned_to:
+-- alter table budget_items add column if not exists frequency text not null default 'monthly' check (frequency in ('monthly','weekly','annual'));
+-- alter table budget_items add column if not exists assigned_to text check (assigned_to in ('Adam','Kayleigh'));

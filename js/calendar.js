@@ -239,6 +239,19 @@ function bindEvents() {
     openAddSheet();
   });
 
+  document.getElementById('jumpDate').addEventListener('change', function() {
+    if (!this.value) return;
+    const dateStr = this.value;
+    this.value = ''; // reset so it can be picked again
+    const el = document.querySelector(`.cal-date-row[data-date="${dateStr}"]`);
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setTimeout(() => openDaySheet(dateStr), 350);
+    } else {
+      openDaySheet(dateStr);
+    }
+  });
+
   document.getElementById('addEntryBtn').addEventListener('click', () => {
     closeSheet('daySheet');
     openAddSheet();

@@ -55,8 +55,16 @@
       <input type="hidden" id="itemType" />
       <input type="hidden" id="itemSection" />
       <div class="form-group">
-        <label>Label</label>
-        <input type="text" id="itemLabel" placeholder="e.g. Mortgage, Salary…" required />
+        <label>Name</label>
+        <input type="text" id="itemName" placeholder="e.g. Mortgage, Salary…" required />
+      </div>
+      <div class="form-group" id="assignedToGroup" style="display:none;">
+        <label>Assigned to</label>
+        <select id="itemAssignedTo">
+          <option value="">— Either —</option>
+          <option value="Adam">Adam</option>
+          <option value="Kayleigh">Kayleigh</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Amount (£)</label>
