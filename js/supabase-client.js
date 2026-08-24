@@ -9,8 +9,8 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── Update these with real email addresses ────────────────
 const USER_EMAIL_MAP = {
-  'adamhorne008@gmail.com': 'Adam',
-  // 'kayleigh@youremail.com': 'Kayleigh',   ← add Kayleigh's email here
+  'adamhorne008@yahoo.co.uk': 'Adam',
+  'cavell1983@aol.com': 'Kayleigh',   
 };
 
 async function requireAuth() {
