@@ -95,8 +95,10 @@ function renderList() {
       const entriesHtml = entries.map(e => {
         const who = (e.created_by || 'adam').toLowerCase();
         const timeStr = e.time ? `<span class="cal-inline-time">${formatTime(e.time)}</span>` : '';
+        const nameTag = who !== 'both' ? `<span class="cal-inline-name">${e.created_by}</span>` : '';
         return `<div class="cal-inline-entry cal-inline-entry--${who}" data-id="${e.id}">
-          ${timeStr}<span class="cal-inline-title">${e.title}</span>
+          <span class="cal-inline-entry__title">${e.title}</span>
+          ${(timeStr || nameTag) ? `<div class="cal-inline-entry__meta">${timeStr}${nameTag}</div>` : ''}
         </div>`;
       }).join('');
 

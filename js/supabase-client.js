@@ -13,9 +13,16 @@ const USER_EMAIL_MAP = {
   'cavell1983@aol.com': 'Kayleigh',   
 };
 
+const ALLOWED_EMAILS = ['adamhorne008@yahoo.co.uk', 'cavell1983@aol.com'];
+
 async function requireAuth() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) { window.location.href = '/login'; return null; }
+  if (!ALLOWED_EMAILS.includes(session.user.email)) {
+    await db.auth.signOut();
+    window.location.href = '/login';
+    return null;
+  }
   return session;
 }
 
