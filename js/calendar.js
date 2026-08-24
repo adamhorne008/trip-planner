@@ -213,6 +213,7 @@ function openAddSheet() {
   editingId = null;
   document.getElementById('sheetTitle').textContent = 'Add entry';
   document.getElementById('entryForm').reset();
+  document.getElementById('entryDate').value = selectedDate;
   document.getElementById('entryPerson').value = currentUser;
   openSheet('entrySheet');
 }
@@ -222,6 +223,7 @@ async function openEditSheet(id) {
   if (!e) return;
   editingId = id;
   document.getElementById('sheetTitle').textContent = 'Edit entry';
+  document.getElementById('entryDate').value   = e.date;
   document.getElementById('entryTitle').value  = e.title;
   document.getElementById('entryPerson').value = e.created_by || currentUser;
   document.getElementById('entryTime').value   = e.time || '';
@@ -233,8 +235,10 @@ async function saveEntry(ev) {
   ev.preventDefault();
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
+  const date = document.getElementById('entryDate').value || selectedDate;
+  if (!date) { alert('No date selected — please close and try again.'); btn.disabled = false; btn.textContent = 'Save'; return; }
   const payload = {
-    date:       selectedDate,
+    date,
     title:      document.getElementById('entryTitle').value.trim(),
     created_by: document.getElementById('entryPerson').value,
     time:       document.getElementById('entryTime').value || null,
@@ -293,7 +297,9 @@ function bindEvents() {
   });
 
   document.getElementById('addEntryBtn').addEventListener('click', () => {
+    const date = selectedDate;
     closeSheet('daySheet');
+    selectedDate = date; // preserve after closeSheet
     openAddSheet();
   });
 
