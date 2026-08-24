@@ -7,7 +7,6 @@ let selectedDate = null;
 let editingId = null;
 let allEntries = [];
 
-// How many months back/forward to show
 const MONTHS_BACK    = 3;
 const MONTHS_FORWARD = 12;
 
@@ -41,7 +40,14 @@ async function loadAllEntries() {
 }
 
 function entriesForDate(dateStr) {
-  return allEntries.filter(e => e.date === dateStr);
+  return allEntries
+    .filter(e => e.date === dateStr)
+    .sort((a, b) => {
+      if (!a.time && !b.time) return 0;
+      if (!a.time) return 1;
+      if (!b.time) return -1;
+      return a.time.localeCompare(b.time);
+    });
 }
 
 function buildDateRange() {
@@ -50,11 +56,15 @@ function buildDateRange() {
   const end   = addDays(today,  (MONTHS_FORWARD * 31));
   const dates = [];
   let cur = start;
-  while (cur <= end) {
-    dates.push(cur);
-    cur = addDays(cur, 1);
-  }
+  while (cur <= end) { dates.push(cur); cur = addDays(cur, 1); }
   return dates;
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  const hr = parseInt(h);
+  return (hr % 12 || 12) + ':' + m + (hr < 12 ? 'am' : 'pm');
 }
 
 function renderList() {
@@ -62,10 +72,9 @@ function renderList() {
   const today = todayISO();
   const dates = buildDateRange();
 
-  // Group by month
   const months = {};
   for (const d of dates) {
-    const key = d.slice(0, 7); // YYYY-MM
+    const key = d.slice(0, 7);
     if (!months[key]) months[key] = [];
     months[key].push(d);
   }
@@ -74,17 +83,21 @@ function renderList() {
   for (const [monthKey, monthDates] of Object.entries(months)) {
     const label = new Date(monthKey + '-01T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
     html += `<div class="cal-month-header" data-month="${monthKey}">${label}</div>`;
+
     for (const d of monthDates) {
       const entries = entriesForDate(d);
       const dt = new Date(d + 'T12:00:00');
-      const dayName = dt.toLocaleDateString('en-GB', { weekday: 'short' });
-      const dayNum  = dt.getDate();
-      const isToday = d === today;
+      const dayName  = dt.toLocaleDateString('en-GB', { weekday: 'short' });
+      const dayNum   = dt.getDate();
+      const isToday   = d === today;
       const isWeekend = dt.getDay() === 0 || dt.getDay() === 6;
 
-      const dots = entries.map(e => {
-        const who = e.created_by ? e.created_by.toLowerCase() : 'both';
-        return `<span class="cal-dot cal-dot--${who}" title="${e.title}"></span>`;
+      const entriesHtml = entries.map(e => {
+        const who = (e.created_by || 'adam').toLowerCase();
+        const timeStr = e.time ? `<span class="cal-inline-time">${formatTime(e.time)}</span>` : '';
+        return `<div class="cal-inline-entry cal-inline-entry--${who}" data-id="${e.id}">
+          ${timeStr}<span class="cal-inline-title">${e.title}</span>
+        </div>`;
       }).join('');
 
       html += `
@@ -93,15 +106,36 @@ function renderList() {
             <span class="cal-date-row__num${isToday ? ' cal-date-row__num--today' : ''}">${dayNum}</span>
             <span class="cal-date-row__day">${dayName}</span>
           </div>
-          <div class="cal-date-row__dots">${dots}</div>
+          <div class="cal-date-row__entries">
+            ${entriesHtml}
+          </div>
+          <button class="cal-add-btn" data-date="${d}" title="Add entry">+</button>
         </div>`;
     }
   }
 
   container.innerHTML = html;
 
+  // Tap inline entry → open detail
+  container.querySelectorAll('.cal-inline-entry[data-id]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      openDetail(el.dataset.id);
+    });
+  });
+
+  // Tap date row (not entry/button) → open day sheet
   container.querySelectorAll('.cal-date-row').forEach(row => {
     row.addEventListener('click', () => openDaySheet(row.dataset.date));
+  });
+
+  // Tap + button → open add sheet for that date
+  container.querySelectorAll('.cal-add-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      selectedDate = btn.dataset.date;
+      openAddSheet();
+    });
   });
 }
 
@@ -130,10 +164,13 @@ function renderDaySheetEntries(dateStr) {
     return;
   }
   container.innerHTML = entries.map(e => `
-    <div class="cal-card cal-card--${(e.created_by||'both').toLowerCase()}" data-id="${e.id}" style="cursor:pointer;">
+    <div class="cal-card cal-card--${(e.created_by||'adam').toLowerCase()}" data-id="${e.id}" style="cursor:pointer;">
       <div class="cal-card__header">
-        <div class="cal-card__title">${e.title}</div>
-        <span class="author-tag author-tag--${(e.created_by||'both').toLowerCase()}">${e.created_by || ''}</span>
+        <div>
+          ${e.time ? `<div style="font-size:11px;color:var(--muted);margin-bottom:2px;">${formatTime(e.time)}</div>` : ''}
+          <div class="cal-card__title">${e.title}</div>
+        </div>
+        <span class="author-tag author-tag--${(e.created_by||'adam').toLowerCase()}">${e.created_by || ''}</span>
       </div>
       ${e.notes ? `<div class="cal-card__notes">${e.notes}</div>` : ''}
     </div>`).join('');
@@ -150,8 +187,9 @@ async function openDetail(id) {
   if (!e) return;
   document.getElementById('detailTitle').textContent = e.title;
   document.getElementById('detailBody').innerHTML = `
-    <div style="margin-bottom:10px;">
-      <span class="author-tag author-tag--${(e.created_by||'both').toLowerCase()}">${e.created_by || ''}</span>
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+      <span class="author-tag author-tag--${(e.created_by||'adam').toLowerCase()}">${e.created_by || ''}</span>
+      ${e.time ? `<span style="font-size:13px;color:var(--muted);">${formatTime(e.time)}</span>` : ''}
     </div>
     ${e.notes ? `<p style="font-size:14px;color:var(--text);line-height:1.6;">${e.notes}</p>` : ''}`;
   document.getElementById('detailDeleteBtn').dataset.id = id;
@@ -175,6 +213,7 @@ function openAddSheet() {
   editingId = null;
   document.getElementById('sheetTitle').textContent = 'Add entry';
   document.getElementById('entryForm').reset();
+  document.getElementById('entryPerson').value = currentUser;
   openSheet('entrySheet');
 }
 
@@ -183,8 +222,10 @@ async function openEditSheet(id) {
   if (!e) return;
   editingId = id;
   document.getElementById('sheetTitle').textContent = 'Edit entry';
-  document.getElementById('entryTitle').value = e.title;
-  document.getElementById('entryNotes').value = e.notes || '';
+  document.getElementById('entryTitle').value  = e.title;
+  document.getElementById('entryPerson').value = e.created_by || currentUser;
+  document.getElementById('entryTime').value   = e.time || '';
+  document.getElementById('entryNotes').value  = e.notes || '';
   openSheet('entrySheet');
 }
 
@@ -193,10 +234,11 @@ async function saveEntry(ev) {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
   const payload = {
-    date: selectedDate,
-    title: document.getElementById('entryTitle').value.trim(),
-    notes: document.getElementById('entryNotes').value.trim() || null,
-    created_by: currentUser,
+    date:       selectedDate,
+    title:      document.getElementById('entryTitle').value.trim(),
+    created_by: document.getElementById('entryPerson').value,
+    time:       document.getElementById('entryTime').value || null,
+    notes:      document.getElementById('entryNotes').value.trim() || null,
   };
   let error, data;
   if (editingId) {
@@ -213,9 +255,7 @@ async function saveEntry(ev) {
   if (error) { alert(error.message); return; }
   closeSheet('entrySheet');
   renderList();
-  if (selectedDate) {
-    renderDaySheetEntries(selectedDate);
-  }
+  if (selectedDate) renderDaySheetEntries(selectedDate);
 }
 
 // ── Sheet helpers ──
@@ -242,7 +282,7 @@ function bindEvents() {
   document.getElementById('jumpDate').addEventListener('change', function() {
     if (!this.value) return;
     const dateStr = this.value;
-    this.value = ''; // reset so it can be picked again
+    this.value = '';
     const el = document.querySelector(`.cal-date-row[data-date="${dateStr}"]`);
     if (el) {
       el.scrollIntoView({ block: 'center', behavior: 'smooth' });

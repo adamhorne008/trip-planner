@@ -23,9 +23,13 @@ create table if not exists calendar_entries (
   date date not null,
   title text not null,
   notes text,
+  time time,
   created_by text not null default 'Adam' check (created_by in ('Adam','Kayleigh')),
   created_at timestamptz default now()
 );
+
+-- Run this if you already created calendar_entries without the time column:
+-- alter table calendar_entries add column if not exists time time;
 
 -- Todos
 create table if not exists todos (
