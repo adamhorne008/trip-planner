@@ -3,24 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Todos — The Ridings</title>
+  <title>Quotes — The Ridings</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="page">
 
-  <div class="todos-header">
-    <div class="todos-header__top">
-      <h1 class="todos-header__title">Todos</h1>
-      <button class="user-avatar" id="userAvatar">A</button>
-    </div>
-    <div class="filter-bar" id="filterBar">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="adam">Adam</button>
-      <button class="filter-btn" data-filter="kayleigh">Kayleigh</button>
-    </div>
+  <div class="quotes-header">
+    <h1 class="quotes-title">Quotes</h1>
+    <button class="user-avatar" id="userAvatar">A</button>
   </div>
 
-  <div class="todos-body" id="todoList">
+  <div class="quotes-body" id="quotesList">
     <div class="spinner"></div>
   </div>
 
@@ -61,44 +54,42 @@
 
   <div class="overlay" id="overlay"></div>
 
-  <!-- Add / Edit Todo -->
-  <div class="sheet" id="todoSheet">
+  <!-- Add / Edit Quote -->
+  <div class="sheet" id="quoteSheet">
     <div class="sheet__handle"></div>
-    <div class="sheet__title" id="todoSheetTitle">Add todo</div>
-    <form id="todoForm">
-      <input type="hidden" id="todoId" />
+    <div class="sheet__title" id="quoteSheetTitle">Add quote</div>
+    <form id="quoteForm">
+      <input type="hidden" id="quoteId" />
       <div class="form-group">
-        <label>Task</label>
-        <input type="text" id="todoTitle" placeholder="What needs doing?" required />
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Assign to</label>
-          <select id="todoAssignee">
-            <option value="Both">Both</option>
-            <option value="Adam">Adam</option>
-            <option value="Kayleigh">Kayleigh</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Due date</label>
-          <input type="date" id="todoDueDate" />
-        </div>
+        <label>Title</label>
+        <input type="text" id="quoteTitle" placeholder="e.g. Kitchen tiles" required />
       </div>
       <div class="form-group">
-        <label>Roadmap task</label>
-        <select id="todoTaskLink">
-          <option value="">— none —</option>
+        <label>Price (£) <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+        <input type="number" id="quotePrice" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="quoteDesc" rows="3" placeholder="Details, supplier, notes…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Month</label>
+        <input type="month" id="quoteMonth" required />
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="quoteStatus">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
         </select>
       </div>
       <div class="form-actions">
-        <button type="button" class="btn btn-ghost"   id="cancelTodoBtn">Cancel</button>
-        <button type="submit" class="btn btn-primary"  id="saveTodoBtn">Save</button>
+        <button type="button" class="btn btn-ghost" id="cancelQuoteBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveQuoteBtn">Save</button>
       </div>
     </form>
-    <div id="deleteTodoWrap" style="margin-top:8px;display:none;">
-      <button type="button" class="btn btn-danger w-full" id="deleteTodoBtn">Delete todo</button>
-    </div>
+    <button type="button" class="btn btn-danger w-full" id="deleteQuoteBtn" style="margin-top:8px;display:none;">Delete</button>
   </div>
 
   <!-- User -->
@@ -110,6 +101,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="/js/supabase-client.js"></script>
-  <script src="/js/todos.js"></script>
+  <script src="/js/quotes.js"></script>
 </body>
 </html>

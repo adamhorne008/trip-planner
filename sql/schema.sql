@@ -24,12 +24,30 @@ create table if not exists calendar_entries (
   title text not null,
   notes text,
   time time,
-  created_by text not null default 'Adam' check (created_by in ('Adam','Kayleigh')),
+  created_by text not null default 'Adam' check (created_by in ('Adam','Kayleigh','Both')),
   created_at timestamptz default now()
 );
 
 -- Run this if you already created calendar_entries without the time column:
 -- alter table calendar_entries add column if not exists time time;
+-- Run this if you need to allow 'Both' as a created_by value:
+-- alter table calendar_entries drop constraint calendar_entries_created_by_check;
+-- alter table calendar_entries add constraint calendar_entries_created_by_check check (created_by in ('Adam','Kayleigh','Both'));
+
+-- Quotes
+create table if not exists quotes (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  price numeric(10,2),
+  status text not null default 'pending' check (status in ('pending','confirmed','completed')),
+  quote_month date not null,
+  created_at timestamptz default now()
+);
+alter table quotes enable row level security;
+create policy "auth_all_quotes" on quotes
+  for all using (auth.role()='authenticated')
+  with check (auth.role()='authenticated');
 
 -- Todos
 create table if not exists todos (
