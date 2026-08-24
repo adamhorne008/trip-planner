@@ -275,6 +275,76 @@ function closeSheet(id) {
   if (id === 'entrySheet') { editingId = null; document.getElementById('entryForm').reset(); }
 }
 
+// ── Month grid view ──
+
+let gridVisible = false;
+let gridYear  = new Date().getFullYear();
+let gridMonth = new Date().getMonth(); // 0-based
+
+function toggleGrid() {
+  gridVisible = !gridVisible;
+  const panel = document.getElementById('calGridPanel');
+  const btn   = document.getElementById('calGridToggle');
+  if (gridVisible) {
+    const today = new Date();
+    gridYear  = today.getFullYear();
+    gridMonth = today.getMonth();
+    panel.style.display = '';
+    btn.classList.add('active');
+    renderGrid();
+  } else {
+    panel.style.display = 'none';
+    btn.classList.remove('active');
+    scrollToToday();
+  }
+}
+
+function renderGrid() {
+  const label = document.getElementById('gridMonthLabel');
+  const grid  = document.getElementById('calGridDays');
+  const today = todayISO();
+
+  const monthDate = new Date(gridYear, gridMonth, 1);
+  label.textContent = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  // Mon=0 … Sun=6
+  const startDow = (monthDate.getDay() + 6) % 7;
+  const daysInMonth = new Date(gridYear, gridMonth + 1, 0).getDate();
+
+  let html = '';
+  for (let i = 0; i < startDow; i++) {
+    html += '<div class="cal-grid-cell cal-grid-cell--empty"></div>';
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = gridYear + '-' +
+      String(gridMonth + 1).padStart(2, '0') + '-' +
+      String(d).padStart(2, '0');
+    const entries = entriesForDate(dateStr);
+    const isToday = dateStr === today;
+    const people  = [...new Set(entries.map(e => (e.created_by || 'adam').toLowerCase()))].slice(0, 3);
+    const dots    = people.map(w => `<span class="cal-dot cal-dot--${w}"></span>`).join('');
+    html += `<div class="cal-grid-cell${isToday ? ' cal-grid-cell--today' : ''}" data-date="${dateStr}">
+      <span class="cal-grid-cell__num">${d}</span>
+      <div class="cal-grid-cell__dots">${dots}</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.cal-grid-cell[data-date]').forEach(el => {
+    el.addEventListener('click', () => {
+      const dateStr = el.dataset.date;
+      toggleGrid();
+      const row = document.querySelector(`.cal-date-row[data-date="${dateStr}"]`);
+      if (row) {
+        row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setTimeout(() => openDaySheet(dateStr), 300);
+      } else {
+        openDaySheet(dateStr);
+      }
+    });
+  });
+}
+
 // ── Bind events ──
 
 function bindEvents() {
@@ -283,17 +353,17 @@ function bindEvents() {
     openAddSheet();
   });
 
-  document.getElementById('jumpDate').addEventListener('change', function() {
-    if (!this.value) return;
-    const dateStr = this.value;
-    this.value = '';
-    const el = document.querySelector(`.cal-date-row[data-date="${dateStr}"]`);
-    if (el) {
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      setTimeout(() => openDaySheet(dateStr), 350);
-    } else {
-      openDaySheet(dateStr);
-    }
+  document.getElementById('calGridToggle').addEventListener('click', toggleGrid);
+
+  document.getElementById('gridPrevBtn').addEventListener('click', () => {
+    gridMonth--;
+    if (gridMonth < 0) { gridMonth = 11; gridYear--; }
+    renderGrid();
+  });
+  document.getElementById('gridNextBtn').addEventListener('click', () => {
+    gridMonth++;
+    if (gridMonth > 11) { gridMonth = 0; gridYear++; }
+    renderGrid();
   });
 
   document.getElementById('addEntryBtn').addEventListener('click', () => {

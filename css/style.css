@@ -945,3 +945,114 @@ select option { background: #fff; }
 .quote-status--pending   { background: #fef9c3; color: #854d0e; }
 .quote-status--confirmed { background: #dbeafe; color: #1e40af; }
 .quote-status--completed { background: #dcfce7; color: #15803d; }
+
+/* ── Calendar month grid view ── */
+.cal-grid-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cal-grid-toggle.active,
+.cal-grid-toggle:active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.cal-grid-panel {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 12px 16px 16px;
+  box-shadow: var(--shadow);
+}
+
+.cal-grid-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.cal-grid-nav-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cal-grid-nav-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.cal-grid-nav-btn:active { background: var(--surface2); opacity: 0.7; }
+
+.cal-grid-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+.cal-grid-days-header span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 2px 0;
+}
+
+.cal-grid-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.1s;
+}
+.cal-grid-cell:active { background: var(--surface2); }
+.cal-grid-cell--empty { cursor: default; pointer-events: none; }
+.cal-grid-cell--today .cal-grid-cell__num {
+  background: var(--accent);
+  color: #fff;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.cal-grid-cell__num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+}
+.cal-grid-cell__dots {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  margin-top: 2px;
+  min-height: 8px;
+}
+.cal-grid-cell__dots .cal-dot { width: 6px; height: 6px; }
